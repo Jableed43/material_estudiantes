@@ -14,9 +14,37 @@
 
 ## 1. Introducción: Prop Drilling
 
+### ¿Qué es Prop Drilling? (Analogía del Mundo Real)
+
+### 📦 Analogía: Pasar una Caja por Múltiples Personas
+
+Imagina que tienes una caja que necesita llegar a alguien:
+- **Prop Drilling**: Pasas la caja por varias personas que no la necesitan, solo para que llegue a quien la necesita
+  - Tú → Persona 1 (no la necesita) → Persona 2 (no la necesita) → Persona 3 (no la necesita) → Persona Final (sí la necesita)
+
+**Es ineficiente** - muchas personas manejan la caja sin necesidad.
+
+### 🏠 Analogía: Pasar un Mensaje por Múltiples Habitaciones
+
+Piensa en pasar un mensaje:
+- **Prop Drilling**: El mensaje pasa por múltiples habitaciones donde nadie lo necesita, solo para llegar a la habitación correcta
+  - Sala → Cocina (no lo necesita) → Dormitorio (no lo necesita) → Baño (no lo necesita) → Estudio (sí lo necesita)
+
+**Es complicado** - el mensaje pasa por muchos lugares innecesariamente.
+
+### 🎯 Analogía: El Teléfono Descompuesto
+
+El juego del teléfono descompuesto:
+- **Prop Drilling**: El mensaje pasa por muchas personas que no lo necesitan, solo para llegar a quien lo necesita
+- **Problema**: El mensaje puede cambiar o perderse en el camino
+
+**Es ineficiente y propenso a errores**.
+
 ### ¿Qué es Prop Drilling?
 
 **Prop Drilling** es el problema de pasar props a través de múltiples niveles de componentes intermedios que no necesitan esos datos, solo para llegar a un componente que sí los necesita.
+
+**En términos simples**: Es como pasar una caja por muchas personas que no la necesitan, solo para que llegue a quien la necesita - es ineficiente y complicado.
 
 ### Ejemplo del Problema:
 

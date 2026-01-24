@@ -1,5 +1,46 @@
 # CSS: Diseño Responsivo y Media Queries 📱💻
 
+## 📑 Índice
+
+1. [¿Qué es el Diseño Responsivo? (Analogía del Mundo Real)](#qué-es-el-diseño-responsivo-analogía-del-mundo-real)
+2. [Viewport Meta Tag](#viewport-meta-tag)
+3. [Media Queries](#media-queries)
+4. [Breakpoints Comunes](#breakpoints-comunes)
+5. [Unidades Relativas para Responsive](#unidades-relativas-para-responsive)
+6. [Imágenes Responsivas](#imágenes-responsivas)
+7. [Referencias Relacionadas](#referencias-relacionadas)
+
+---
+
+## ¿Qué es el Diseño Responsivo? (Analogía del Mundo Real)
+
+### 📱 Analogía: La Ropa que se Adapta
+
+Imagina que tienes ropa que se adapta a tu tamaño:
+- **Móvil**: Como ropa ajustada para personas pequeñas
+- **Tablet**: Como ropa para personas medianas
+- **Desktop**: Como ropa para personas grandes
+
+**El diseño responsivo hace lo mismo**: La página web se adapta al tamaño de la pantalla.
+
+### 🏠 Analogía: La Casa que se Adapta
+
+Piensa en una casa que cambia según quién la habita:
+- **Móvil**: Como una casa pequeña (1 habitación)
+- **Tablet**: Como una casa mediana (2-3 habitaciones)
+- **Desktop**: Como una casa grande (múltiples habitaciones)
+
+**La página web se reorganiza** según el espacio disponible.
+
+### 📐 Analogía: El Organizador Flexible
+
+Un organizador que se adapta:
+- **Espacio pequeño**: Organiza todo verticalmente (apilado)
+- **Espacio mediano**: Organiza en 2 columnas
+- **Espacio grande**: Organiza en múltiples columnas
+
+**El diseño responsivo reorganiza el contenido** según el espacio disponible.
+
 Permiten adaptar los estilos según el ancho de la pantalla. Fundamental seguir la estrategia **Mobile-First**.
 
 ## Viewport Meta Tag

@@ -1,5 +1,44 @@
 # JavaScript: Ejercicios Prácticos 💪
 
+## 📑 Índice
+
+1. [¿Por qué Practicar? (Analogía del Mundo Real)](#por-qué-practicar-analogía-del-mundo-real)
+2. [Ejercicios para Practicar](#ejercicios-para-practicar)
+3. [Referencias Relacionadas](#referencias-relacionadas)
+
+---
+
+## ¿Por qué Practicar? (Analogía del Mundo Real)
+
+### 🏋️ Analogía: El Gimnasio
+
+Imagina que quieres estar en forma:
+- **Aprender teoría**: Es como leer sobre ejercicio
+- **Practicar**: Es como ir al gimnasio y hacer ejercicio
+- **Resultado**: Solo mejoras cuando practicas, no solo leyendo
+
+**La práctica es esencial** - no puedes aprender a programar solo leyendo, necesitas escribir código.
+
+### 🎹 Analogía: Aprender a Tocar Piano
+
+Cuando aprendes a tocar piano:
+- **Teoría**: Aprender las notas, los acordes
+- **Práctica**: Tocar el piano una y otra vez
+- **Resultado**: Solo mejoras tocando, no solo estudiando teoría
+
+**La práctica hace al maestro** - necesitas escribir código para aprender a programar.
+
+### 🚗 Analogía: Aprender a Conducir
+
+Aprender a conducir:
+- **Teoría**: Aprender las reglas de tránsito
+- **Práctica**: Conducir el auto
+- **Resultado**: Solo aprendes a conducir manejando, no solo leyendo
+
+**Necesitas práctica** para dominar la programación.
+
+---
+
 ## Ejercicios para Practicar
 
 ### Ejercicio 1: Calculadora Simple

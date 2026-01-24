@@ -1,8 +1,46 @@
 # Deploy Frontend: Netlify 🚀
 
-## Introducción a Netlify
+## 📑 Índice
+
+1. [¿Qué es Netlify? (Analogía del Mundo Real)](#qué-es-netlify-analogía-del-mundo-real)
+2. [Preparación del Proyecto](#preparación-del-proyecto)
+3. [Deploy desde Git](#deploy-desde-git)
+4. [Variables de Entorno](#variables-de-entorno)
+5. [Referencias Relacionadas](#referencias-relacionadas)
+
+---
+
+## ¿Qué es Netlify? (Analogía del Mundo Real)
+
+### 🚀 Analogía: Publicar tu Aplicación en Internet
+
+Imagina que creaste una aplicación:
+- **Desarrollo local**: La tienes en tu computadora (solo tú la ves)
+- **Netlify**: Es como el "servidor público" donde la publicas para que todos la vean
+
+**Netlify es como publicar tu aplicación** en internet para que cualquiera pueda acceder a ella.
+
+### 🏠 Analogía: Abrir tu Casa al Público
+
+Piensa en abrir tu casa:
+- **Desarrollo local**: Construyes la casa (solo tú puedes entrar)
+- **Netlify**: Es como abrir la casa al público (cualquiera puede entrar)
+
+**Netlify hace tu aplicación accesible** para todos en internet.
+
+### 📺 Analogía: Transmitir en Vivo
+
+Transmitir en vivo:
+- **Desarrollo local**: Grabas el video (solo tú lo ves)
+- **Netlify**: Es como transmitir en vivo (todos pueden verlo)
+
+**Netlify "transmite" tu aplicación** para que todos puedan acceder a ella.
+
+### Introducción a Netlify
 
 Netlify es una plataforma de hosting para aplicaciones web estáticas y sitios generados estáticamente. Es ideal para aplicaciones React, Vue, Angular y otros frameworks frontend.
+
+**En términos simples**: Netlify es como el "servidor público" donde publicas tu aplicación frontend para que esté disponible en internet.
 
 ### Características
 

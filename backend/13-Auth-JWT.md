@@ -37,7 +37,44 @@ Manejar la seguridad es la parte más crítica del backend. Sin una seguridad ad
 
 **Nunca** guardes contraseñas en texto plano. Si hackean tu base de datos, todos estarán expuestos.
 
-### ¿Qué es Hashing?
+### ¿Qué es Hashing? (Analogía del Mundo Real)
+
+### 🔒 Analogía: La Caja Fuerte con Combinación
+
+Imagina que tienes una caja fuerte:
+- **Contraseña original**: "1234" (como la combinación que sabes)
+- **Hash**: `$2b$10$S9...` (como el mecanismo interno de la caja fuerte)
+
+**Características**:
+- Puedes poner la combinación (contraseña) y abrir la caja
+- Pero no puedes ver la combinación mirando el mecanismo interno (hash)
+- Es unidireccional: combinación → mecanismo funciona, pero mecanismo → combinación no funciona
+
+### 🍳 Analogía: Cocinar un Huevo
+
+Piensa en cocinar un huevo:
+- **Contraseña original**: El huevo crudo
+- **Hash**: El huevo cocido
+
+**Puedes**:
+- Convertir huevo crudo en huevo cocido (contraseña → hash) ✅
+- Verificar que un huevo cocido viene de un huevo crudo (comparar) ✅
+
+**NO puedes**:
+- Convertir huevo cocido de vuelta a huevo crudo (hash → contraseña) ❌
+
+### 🔐 Analogía: La Huella Digital
+
+Tu huella digital:
+- **Contraseña original**: Tu dedo
+- **Hash**: La huella digital
+
+**Puedes**:
+- Crear una huella de tu dedo (contraseña → hash) ✅
+- Comparar una huella con tu dedo para verificar (comparar) ✅
+
+**NO puedes**:
+- Recrear tu dedo completo solo con la huella (hash → contraseña) ❌
 
 **Hashing** es el proceso de convertir la contraseña "1234" en algo como `$2b$10$S9...` (un hash). Es una función unidireccional: puedes convertir la contraseña en hash, pero no puedes convertir el hash de vuelta a la contraseña original.
 
@@ -180,6 +217,41 @@ const hash = await bcrypt.hash(password, 12);
 ---
 
 ## 3. JWT (JSON Web Token)
+
+### 🎫 Analogía: El Pase de Acceso Temporal
+
+Imagina que vas a un evento:
+- **Login**: Te identificas en la entrada (email y contraseña)
+- **JWT**: Recibes un pase con tu información (nombre, tipo de acceso, validez)
+- **Uso**: Muestras el pase cada vez que quieres entrar a una sección
+- **Expiración**: El pase tiene una fecha de vencimiento
+
+**Características**:
+- No necesitas volver a identificarte cada vez
+- El pase contiene tu información
+- El pase expira después de un tiempo
+- Si pierdes el pase, puedes pedir uno nuevo
+
+### 🚗 Analogía: El Permiso de Conducir
+
+Tu licencia de conducir:
+- **Login**: Te identificas para obtenerla (documentos, examen)
+- **JWT**: La licencia contiene tu información (nombre, tipo, fecha de vencimiento)
+- **Uso**: La muestras cuando te la piden
+- **Expiración**: Tiene una fecha de vencimiento
+
+**Ventajas**:
+- No necesitas llevar todos tus documentos cada vez
+- La licencia contiene la información necesaria
+- Es temporal (debe renovarse)
+
+### 🎟️ Analogía: El Ticket de Cine
+
+Un ticket de cine:
+- **Login**: Compras el ticket (te identificas y pagas)
+- **JWT**: El ticket contiene información (película, asiento, hora)
+- **Uso**: Muestras el ticket para entrar
+- **Expiración**: El ticket solo es válido para esa función
 
 Es como un "pase VIP". Una vez que el usuario se loguea con éxito, el servidor le envía un token. El usuario lo guarda y lo envía en cada nueva petición.
 

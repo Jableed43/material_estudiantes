@@ -1,4 +1,46 @@
-# Master Guide: SQL vs NoSQL - Documento de Transición 🗄️
+# SQL vs NoSQL: Introducción a Bases de Datos 🗄️
+
+## 📑 Índice
+
+1. [¿Qué es una Base de Datos? (Analogía del Mundo Real)](#qué-es-una-base-de-datos-analogía-del-mundo-real)
+2. [Relacional (SQL) vs. No Relacional (NoSQL)](#1-relacional-sql-vs-no-relacional-nosql)
+3. [Comparación Detallada: MySQL vs MongoDB](#2-comparación-detallada-mysql-vs-mongodb)
+4. [¿Cuándo usar cada una?](#4-cuándo-usar-cada-una)
+5. [Referencias Relacionadas](#referencias-relacionadas)
+
+---
+
+## ¿Qué es una Base de Datos? (Analogía del Mundo Real)
+
+### 📚 Analogía: La Biblioteca
+
+Imagina una biblioteca:
+- **Base de Datos**: La biblioteca completa
+- **Tablas/Colecciones**: Las diferentes secciones (libros, autores, préstamos)
+- **Datos**: Los libros, información de autores, registros de préstamos
+- **Sistema de organización**: Las reglas para encontrar y organizar la información
+
+**Una base de datos es como una biblioteca organizada** donde guardas información de forma estructurada y fácil de encontrar.
+
+### 🗂️ Analogía: El Archivo de una Empresa
+
+Piensa en el archivo de una empresa:
+- **Base de Datos**: El archivo completo
+- **Tablas/Archivos**: Diferentes carpetas (empleados, clientes, productos)
+- **Datos**: La información de cada empleado, cliente, producto
+- **Búsqueda**: Puedes buscar información rápidamente
+
+**Una base de datos te permite guardar, organizar y buscar información** de forma eficiente.
+
+### 💾 Analogía: El Disco Duro Organizado
+
+Tu disco duro:
+- **Base de Datos**: Todo el disco duro
+- **Tablas/Carpetas**: Diferentes carpetas organizadas
+- **Datos**: Los archivos dentro de cada carpeta
+- **Sistema de archivos**: Las reglas para organizar y encontrar archivos
+
+**Pero una base de datos es más inteligente**: Puede relacionar información, validar datos, y hacer búsquedas complejas.
 
 Este documento sirve como **puente de transición** entre bases de datos relacionales (SQL) y no relacionales (NoSQL), ayudando a entender cuándo y por qué elegir cada tipo.
 

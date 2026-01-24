@@ -1,8 +1,75 @@
 # Master Guide: CSS3, Layouts y Animaciones 🎨
 
+## 📑 Índice
+
+1. [¿Qué es CSS? (Analogía del Mundo Real)](#qué-es-css-analogía-del-mundo-real)
+2. [Introducción a CSS y Vinculación](#1-introducción-a-css-y-vinculación)
+3. [El Modelo de Caja y Reset](#2-el-modelo-de-caja-y-reset)
+4. [Selectores CSS](#3-selectores-css)
+5. [Propiedades Fundamentales](#4-propiedades-fundamentales)
+6. [Unidades de Medida en CSS](#35-unidades-de-medida-en-css)
+7. [Posicionamiento](#5-posicionamiento)
+8. [Pseudo-clases y Pseudo-elementos](#6-pseudo-clases-y-pseudo-elementos)
+9. [Flexbox (Diseño Unidimensional)](#7-flexbox-diseño-unidimensional-)
+10. [CSS Grid (Diseño Bidimensional)](#8-css-grid-diseño-bidimensional-)
+11. [Transformaciones](#9-transformaciones-)
+12. [Transiciones](#10-transiciones-cambio-entre-2-estados-)
+13. [Animaciones con @keyframes](#11-animaciones-con-keyframes)
+14. [Diseño Responsivo y Media Queries](#12-diseño-responsivo-y-media-queries-)
+15. [Bootstrap - Framework CSS](#13-bootstrap---framework-css)
+16. [DevTools del Navegador para CSS](#14-devtools-del-navegador-para-css-)
+17. [Variables CSS con :root](#14-variables-css-con-root-)
+18. [Buenas Prácticas y Recomendaciones](#15-buenas-prácticas-y-recomendaciones-)
+19. [Ejemplos Prácticos del Código Modelo](#16-ejemplos-prácticos-del-código-modelo)
+20. [Referencias Relacionadas](#referencias-relacionadas)
+
+---
+
+## ¿Qué es CSS? (Analogía del Mundo Real)
+
+### 🎨 Analogía: HTML es la Estructura, CSS es la Decoración
+
+Imagina construir una casa:
+- **HTML**: Es como la estructura de la casa (paredes, puertas, ventanas)
+- **CSS**: Es como la decoración (colores, muebles, estilo)
+- **Resultado**: Una casa completa y bonita
+
+**HTML define QUÉ hay** (estructura), **CSS define CÓMO se ve** (presentación).
+
+### 👔 Analogía: El Traje y la Ropa
+
+Piensa en una persona:
+- **HTML**: Es como el cuerpo (estructura básica)
+- **CSS**: Es como la ropa que usa (colores, estilos, diseño)
+- **Resultado**: Una persona bien vestida
+
+**CSS es como vestir tu HTML** - le das estilo, colores y diseño.
+
+### 📝 Analogía: El Documento y el Formato
+
+Un documento de Word:
+- **HTML**: Es como el texto sin formato (solo el contenido)
+- **CSS**: Es como aplicar formato (negrita, colores, tamaños, márgenes)
+- **Resultado**: Un documento bien formateado
+
+**CSS formatea tu HTML** - le da estilo y presentación.
+
+### 🎭 Analogía: El Actor y el Maquillaje
+
+En una obra de teatro:
+- **HTML**: Es como el actor (la persona)
+- **CSS**: Es como el maquillaje y vestuario (cómo se ve)
+- **Resultado**: Un personaje completamente transformado
+
+**CSS transforma la apariencia** de tu HTML.
+
+---
+
 ## 1. Introducción a CSS y Vinculación
 
 **CSS (Cascading Style Sheets)** es el lenguaje que define cómo se ven los elementos HTML. Permite controlar colores, fuentes, tamaños, posicionamiento y mucho más.
+
+**En términos simples**: CSS es como el "diseñador" de tu página web - define los colores, tamaños, espacios y cómo se organizan visualmente todos los elementos.
 
 ### Vinculación de CSS a HTML
 
@@ -1813,5 +1880,28 @@ header {
 - Uso de componentes de Bootstrap en contexto real
 
 ---
+
+## Referencias Relacionadas
+
+### 📚 Material del Docente
+- **CSS Guía Maestra**: `material-docente/frontend/CSS-Guia-Maestra.md`
+- **HTML Guía Maestra**: `material-docente/frontend/HTML-Guia-Maestra.md`
+- **Índice Frontend**: `material-docente/frontend/INDICE-FRONTEND.md`
+
+### 💻 Código Modelo
+- **CSS Básico**: `CODIGO/frontend/tema-03-introduccion-css-estilos-basicos/`
+- **CSS Flexbox y Grid**: `CODIGO/frontend/tema-05-css-flexbox-grid/`
+- **CSS Posicionamiento**: `CODIGO/frontend/tema-04-css-posicionamiento-pseudo-clases-elementos/`
+- **CSS Transformaciones**: `CODIGO/frontend/tema-06-css-transformaciones-transiciones-animaciones/`
+- **CSS Responsive**: `CODIGO/frontend/tema-07-css-responsive-design/`
+- **Bootstrap**: `CODIGO/frontend/tema-08-maquetacion-web-bootstrap/`
+
+### 📖 Material para Estudiantes Relacionado
+- **HTML Básico**: `MATERIAL-ESTUDIANTES/frontend/01-HTML-Basico.md`
+- **CSS Posicionamiento**: `MATERIAL-ESTUDIANTES/frontend/04-CSS-Posicionamiento.md`
+- **CSS Flexbox y Grid**: `MATERIAL-ESTUDIANTES/frontend/05-CSS-Flexbox-Grid.md`
+- **CSS Transformaciones**: `MATERIAL-ESTUDIANTES/frontend/06-CSS-Transformaciones.md`
+- **CSS Responsive**: `MATERIAL-ESTUDIANTES/frontend/07-CSS-Responsive.md`
+- **CSS Bootstrap**: `MATERIAL-ESTUDIANTES/frontend/08-CSS-Bootstrap.md`
 
 **Próximo tema**: JavaScript: Guía Maestra

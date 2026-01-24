@@ -1,8 +1,51 @@
 # Master Guide: HTML5 y Estructura Web 🏗️
 
+# HTML: Fundamentos y Estructura Web 🏗️
+
+## 📑 Índice
+
+1. [Fundamentos de HTML](#1-fundamentos-de-html)
+2. [Estructura Base de un Documento](#2-estructura-base-de-un-documento)
+3. [Etiquetas Básicas de Texto y Estructura](#3-etiquetas-básicas-de-texto-y-estructura)
+4. [Semántica y Organización](#4-semántica-y-organización-)
+5. [Formularios](#5-formularios)
+6. [Multimedia](#6-multimedia)
+7. [Referencias Relacionadas](#referencias-relacionadas)
+
+---
+
 ## 1. Fundamentos de HTML
 
+### 🏗️ Analogía: El Esqueleto de una Casa
+
+Imagina que estás construyendo una casa:
+- **HTML**: Es el esqueleto, la estructura básica (paredes, puertas, ventanas)
+- **CSS**: Es la decoración, los colores, el estilo (pintura, muebles)
+- **JavaScript**: Es la funcionalidad, las cosas que se mueven (luces, puertas automáticas)
+
+**HTML define QUÉ hay en la página**, no cómo se ve ni cómo funciona.
+
+### 📋 Analogía: El Contenido de un Documento
+
+Piensa en un documento de Word:
+- **HTML**: Es el contenido y la estructura (títulos, párrafos, listas)
+- **CSS**: Es el formato (fuentes, colores, márgenes)
+- **JavaScript**: Es la interactividad (botones que hacen cosas)
+
+**HTML es como el contenido del documento**, sin formato ni interactividad.
+
+### 🧱 Analogía: Los Bloques de Construcción
+
+Como los bloques de LEGO:
+- **HTML**: Son los bloques básicos (rectangulares, cuadrados, etc.)
+- **CSS**: Es cómo los coloreas y organizas
+- **JavaScript**: Es cómo los haces interactivos (que se muevan, que hagan sonido)
+
+**Cada etiqueta HTML es como un tipo de bloque** que tiene un propósito específico.
+
 **HTML (HyperText Markup Language)** es el lenguaje estándar que define la estructura y el contenido de una página web mediante una jerarquía de etiquetas.
+
+**En términos simples**: HTML es como el esqueleto de tu página web - define qué elementos hay y cómo están organizados, pero no cómo se ven ni cómo funcionan.
 
 ### Estructura Base de un Documento
 

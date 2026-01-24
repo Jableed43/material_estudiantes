@@ -1,5 +1,45 @@
 # CSS: Posicionamiento y Pseudo-clases/Pseudo-elementos 📍
 
+## 📑 Índice
+
+1. [¿Qué es el Posicionamiento? (Analogía del Mundo Real)](#qué-es-el-posicionamiento-analogía-del-mundo-real)
+2. [Tipos de Posicionamiento](#tipos-de-posicionamiento)
+3. [Pseudo-clases y Pseudo-elementos](#pseudo-clases-y-pseudo-elementos)
+4. [Referencias Relacionadas](#referencias-relacionadas)
+
+---
+
+## ¿Qué es el Posicionamiento? (Analogía del Mundo Real)
+
+### 📍 Analogía: Colocar Objetos en una Habitación
+
+Imagina que estás organizando objetos en una habitación:
+- **Static**: Los objetos están en su lugar natural (donde los pones, ahí quedan)
+- **Relative**: Mueves un objeto un poco de su posición original (como empujarlo)
+- **Absolute**: Colocas un objeto en una posición exacta (como poner un cuadro en una pared específica)
+- **Fixed**: Fijas un objeto que no se mueve aunque muevas otras cosas (como un cuadro pegado a la pared)
+- **Sticky**: Un objeto que se queda pegado cuando llegas a cierto punto (como un imán)
+
+### 🎯 Analogía: Los Pines en un Mapa
+
+Piensa en colocar pines en un mapa:
+- **Static**: Los pines están donde los pones naturalmente
+- **Relative**: Mueves un pin un poco de su posición
+- **Absolute**: Colocas un pin en coordenadas exactas del mapa
+- **Fixed**: Un pin que siempre está en la misma posición aunque muevas el mapa
+- **Sticky**: Un pin que se "pega" cuando llegas a cierta área del mapa
+
+### 🏠 Analogía: Organizar Muebles
+
+Cuando organizas muebles:
+- **Static**: Los muebles están en su lugar normal
+- **Relative**: Mueves un mueble un poco de su posición
+- **Absolute**: Colocas un mueble en una posición exacta (como un cuadro en la pared)
+- **Fixed**: Un mueble que siempre está en el mismo lugar (como una lámpara fija)
+- **Sticky**: Un mueble que se "pega" cuando llegas cerca (como un imán)
+
+---
+
 ## Posicionamiento
 
 ### Tipos de Posicionamiento

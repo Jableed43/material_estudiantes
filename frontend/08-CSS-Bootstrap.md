@@ -1,6 +1,44 @@
 # CSS: Bootstrap - Framework CSS 🎨
 
+## 📑 Índice
+
+1. [¿Qué es Bootstrap? (Analogía del Mundo Real)](#qué-es-bootstrap-analogía-del-mundo-real)
+2. [Inclusión de Bootstrap](#inclusión-de-bootstrap)
+3. [Sistema de Grid de Bootstrap](#sistema-de-grid-de-bootstrap)
+4. [Componentes Principales](#componentes-principales)
+5. [Referencias Relacionadas](#referencias-relacionadas)
+
+---
+
+## ¿Qué es Bootstrap? (Analogía del Mundo Real)
+
+### 🧱 Analogía: Los Bloques de Construcción Prefabricados
+
+Imagina que estás construyendo una casa:
+- **CSS puro**: Como construir todo desde cero, ladrillo por ladrillo
+- **Bootstrap**: Como usar bloques prefabricados - ya están hechos, solo los colocas
+
+**Bootstrap te da componentes ya hechos** (botones, cards, navegación) que solo necesitas usar.
+
+### 🎨 Analogía: El Kit de Diseño
+
+Piensa en un kit de diseño profesional:
+- **CSS puro**: Como diseñar cada elemento desde cero
+- **Bootstrap**: Como tener un kit con elementos ya diseñados profesionalmente
+
+**Bootstrap es como un kit de diseño** con componentes profesionales listos para usar.
+
+### 🏗️ Analogía: La Plantilla de Construcción
+
+Una plantilla de construcción:
+- **CSS puro**: Como diseñar cada parte de la casa
+- **Bootstrap**: Como tener una plantilla con partes ya diseñadas
+
+**Bootstrap te ahorra tiempo** usando componentes ya diseñados y probados.
+
 Bootstrap es el framework CSS más popular para crear sitios web responsivos rápidamente.
+
+**En términos simples**: Bootstrap es como tener un kit de herramientas CSS con componentes profesionales ya hechos, que solo necesitas usar en tu proyecto.
 
 ## Inclusión de Bootstrap
 

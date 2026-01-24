@@ -1,6 +1,48 @@
 # Node.js: Entorno de Ejecución 🟢
 
-## ¿Qué es Node.js?
+## 📑 Índice
+
+1. [¿Qué es Node.js? (Analogía del Mundo Real)](#qué-es-nodejs-analogía-del-mundo-real)
+2. [Instalación](#instalación)
+3. [Módulos](#módulos)
+4. [Sistema de Archivos (fs)](#sistema-de-archivos-fs)
+5. [HTTP Server](#http-server)
+6. [Conceptos Clave](#conceptos-clave)
+7. [Referencias Relacionadas](#referencias-relacionadas)
+
+---
+
+## ¿Qué es Node.js? (Analogía del Mundo Real)
+
+### 🏠 Analogía: La Casa y el Servidor
+
+Imagina que tienes una casa:
+- **JavaScript en el navegador**: Como tener electricidad solo en algunas habitaciones (frontend)
+- **Node.js**: Como tener electricidad en toda la casa, incluyendo el sótano (servidor)
+
+**Antes de Node.js**: JavaScript solo funcionaba en el navegador (frontend).
+**Con Node.js**: JavaScript también funciona en el servidor (backend).
+
+**Analogía**: Como tener un idioma (JavaScript) que antes solo se hablaba en un país (navegador), y ahora se habla en todo el mundo (navegador + servidor).
+
+### 🌍 Analogía: El Idioma Universal
+
+Piensa en JavaScript como un idioma:
+- **Antes**: Solo se hablaba en el "país navegador" (frontend)
+- **Con Node.js**: Ahora se habla también en el "país servidor" (backend)
+- **Ventaja**: Puedes usar el mismo idioma (JavaScript) en ambos lados
+
+**Beneficio**: No necesitas aprender otro idioma (lenguaje) para el backend.
+
+### 🚗 Analogía: El Motor Universal
+
+Imagina un motor:
+- **JavaScript en navegador**: Como un motor que solo funciona en autos (frontend)
+- **Node.js**: Como el mismo motor pero que ahora también funciona en barcos y aviones (backend)
+
+**El mismo motor (JavaScript) ahora funciona en diferentes lugares**.
+
+### ¿Qué es Node.js?
 
 Node.js es el entorno que permite ejecutar JavaScript en el servidor. Antes de Node.js, JavaScript solo se ejecutaba en el navegador.
 

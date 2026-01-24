@@ -1,8 +1,46 @@
 # Deploy Frontend: Vercel 🚀
 
-## Introducción a Vercel
+## 📑 Índice
+
+1. [¿Qué es Vercel? (Analogía del Mundo Real)](#qué-es-vercel-analogía-del-mundo-real)
+2. [Preparación del Proyecto](#preparación-del-proyecto)
+3. [Deploy desde Git](#deploy-desde-git)
+4. [Variables de Entorno](#variables-de-entorno)
+5. [Referencias Relacionadas](#referencias-relacionadas)
+
+---
+
+## ¿Qué es Vercel? (Analogía del Mundo Real)
+
+### 🚀 Analogía: Publicar tu Aplicación en Internet
+
+Imagina que creaste una aplicación:
+- **Desarrollo local**: La tienes en tu computadora (solo tú la ves)
+- **Vercel**: Es como el "servidor público" donde la publicas para que todos la vean
+
+**Vercel es como publicar tu aplicación** en internet para que cualquiera pueda acceder a ella.
+
+### 🌐 Analogía: Subir un Video a YouTube
+
+Subir un video:
+- **Desarrollo local**: Grabas y editas el video (solo tú lo ves)
+- **Vercel**: Es como subir el video a YouTube (todos pueden verlo)
+
+**Vercel "publica" tu aplicación** para que esté disponible para todos.
+
+### 🏢 Analogía: Abrir una Tienda
+
+Abrir una tienda:
+- **Desarrollo local**: Preparas la tienda (solo tú puedes entrar)
+- **Vercel**: Es como abrir la tienda al público (cualquiera puede entrar)
+
+**Vercel hace tu aplicación accesible** para todos en internet.
+
+### Introducción a Vercel
 
 Vercel es una plataforma de hosting optimizada para aplicaciones frontend modernas. Es especialmente popular para proyectos React, Next.js, Vue y otros frameworks.
+
+**En términos simples**: Vercel es como el "servidor público" donde publicas tu aplicación frontend para que esté disponible en internet.
 
 ### Características
 
