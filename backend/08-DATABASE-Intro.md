@@ -1,15 +1,5 @@
 # SQL vs NoSQL: Introducción a Bases de Datos 🗄️
 
-## 📑 Índice
-
-1. [¿Qué es una Base de Datos? (Analogía del Mundo Real)](#qué-es-una-base-de-datos-analogía-del-mundo-real)
-2. [Relacional (SQL) vs. No Relacional (NoSQL)](#1-relacional-sql-vs-no-relacional-nosql)
-3. [Comparación Detallada: MySQL vs MongoDB](#2-comparación-detallada-mysql-vs-mongodb)
-4. [¿Cuándo usar cada una?](#4-cuándo-usar-cada-una)
-5. [Referencias Relacionadas](#referencias-relacionadas)
-
----
-
 ## ¿Qué es una Base de Datos? (Analogía del Mundo Real)
 
 ### 📚 Analogía: La Biblioteca

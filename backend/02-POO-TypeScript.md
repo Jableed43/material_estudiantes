@@ -25,15 +25,15 @@
 10. [Type Assertions y Type Guards](#76-type-assertions-y-type-guards)
 
 ### Parte 2: Programación Orientada a Objetos (POO)
-8. [Introducción a POO](#8-introducción-a-poo)
-9. [Encapsulación](#9-encapsulación)
-10. [Herencia](#10-herencia)
-11. [Polimorfismo](#11-polimorfismo)
-12. [Composición](#12-composición)
-13. [Proyecto Integrador: Concesionario](#13-proyecto-integrador-concesionario)
+11. [Introducción a POO](#8-introducción-a-poo)
+12. [Encapsulación](#9-encapsulación)
+13. [Herencia](#10-herencia)
+14. [Polimorfismo](#11-polimorfismo)
+15. [Composición](#12-composición)
+16. [Proyecto Integrador: Concesionario](#13-proyecto-integrador-concesionario)
 
 ### Parte 3: Ejemplos Prácticos
-14. [Ejemplos del Código Modelo](#14-ejemplos-del-código-modelo)
+17. [Ejemplos del Código Modelo](#14-ejemplos-del-código-modelo)
 
 ---
 

@@ -18,9 +18,9 @@
 14. [Diseño Responsivo y Media Queries](#12-diseño-responsivo-y-media-queries-)
 15. [Bootstrap - Framework CSS](#13-bootstrap---framework-css)
 16. [DevTools del Navegador para CSS](#14-devtools-del-navegador-para-css-)
-17. [Variables CSS con :root](#14-variables-css-con-root-)
-18. [Buenas Prácticas y Recomendaciones](#15-buenas-prácticas-y-recomendaciones-)
-19. [Ejemplos Prácticos del Código Modelo](#16-ejemplos-prácticos-del-código-modelo)
+17. [Variables CSS con :root](#15-variables-css-con-root-)
+18. [Buenas Prácticas y Recomendaciones](#16-buenas-prácticas-y-recomendaciones-)
+19. [Ejemplos Prácticos del Código Modelo](#17-ejemplos-prácticos-del-código-modelo)
 20. [Referencias Relacionadas](#referencias-relacionadas)
 
 ---
@@ -1309,7 +1309,7 @@ Permite guardar cambios localmente sin modificar archivos originales:
 
 ---
 
-## 14. Variables CSS con :root 🎨
+## 15. Variables CSS con :root 🎨
 
 Las **variables CSS** (también llamadas custom properties) permiten definir valores reutilizables que puedes usar en toda tu hoja de estilos. Esto facilita el mantenimiento y permite crear temas consistentes.
 
@@ -1608,7 +1608,7 @@ document.documentElement.setAttribute('data-theme', 'light');
 
 ---
 
-## 15. Buenas Prácticas y Recomendaciones ✅
+## 16. Buenas Prácticas y Recomendaciones ✅
 
 ### Organización de CSS
 
@@ -1663,7 +1663,7 @@ body {
 
 ---
 
-## 16. Ejemplos Prácticos del Código Modelo
+## 17. Ejemplos Prácticos del Código Modelo
 
 ### Ejemplo 1: CSS Básico (Tema 03)
 

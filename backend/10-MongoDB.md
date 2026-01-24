@@ -13,11 +13,10 @@
 10. [Modificadores de Campos](#10-modificadores-de-campos)
 11. [Validators y Custom Validators](#11-validators-y-custom-validators)
 12. [Virtuals (Valores Virtuales)](#12-virtuals-valores-virtuales)
-13. [Referencias y Populate](#13-referencias-y-populate)
-14. [Documentos Embebidos](#14-documentos-embebidos)
-15. [Aggregation Pipeline](#15-aggregation-pipeline)
-16. [Índices](#16-índices)
-17. [Conexión desde Node.js con Mongoose](#17-conexión-desde-nodejs-con-mongoose)
+13. [Documentos Embebidos](#13-documentos-embebidos)
+14. [Aggregation Pipeline](#14-aggregation-pipeline)
+15. [Índices](#15-índices)
+16. [Conexión desde Node.js con Mongoose](#16-conexión-desde-nodejs-con-mongoose)
 
 ---
 
@@ -381,7 +380,7 @@ Servicio de MongoDB en la nube (DBaaS - Database as a Service).
 
 ---
 
-## 3. Instalación y Herramientas
+## 4. Instalación y Herramientas
 
 ### MongoDB Community Server
 El motor de la base de datos (el "servidor").
@@ -413,7 +412,7 @@ mongosh "mongodb://localhost:27017"
 
 ---
 
-## 4. Operaciones CRUD Básicas
+## 5. Operaciones CRUD Básicas
 
 ### CREATE - Insertar Documentos
 
@@ -547,7 +546,7 @@ db.usuarios.deleteMany({ ciudad: "Madrid" });
 
 ---
 
-## 5. Operadores de Consulta
+## 6. Operadores de Consulta
 
 Los operadores de consulta permiten realizar búsquedas complejas y precisas.
 

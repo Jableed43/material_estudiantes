@@ -5,12 +5,17 @@
 ## 📑 Índice
 
 1. [Fundamentos de HTML](#1-fundamentos-de-html)
-2. [Estructura Base de un Documento](#2-estructura-base-de-un-documento)
-3. [Etiquetas Básicas de Texto y Estructura](#3-etiquetas-básicas-de-texto-y-estructura)
-4. [Semántica y Organización](#4-semántica-y-organización-)
-5. [Formularios](#5-formularios)
-6. [Multimedia](#6-multimedia)
-7. [Referencias Relacionadas](#referencias-relacionadas)
+2. [Etiquetas Básicas de Texto y Estructura](#2-etiquetas-básicas-de-texto-y-estructura)
+3. [Semántica y Organización](#3-semántica-y-organización-)
+4. [Comportamiento de los Elementos (Display)](#4-comportamiento-de-los-elementos-display-)
+5. [Listas](#5-listas-)
+6. [Multimedia e Interactividad](#6-multimedia-e-interactividad-)
+7. [Formularios Básicos](#7-formularios-básicos-)
+8. [Ocultando Elementos: La Diferencia Clave](#8-ocultando-elementos-la-diferencia-clave)
+9. [Rutas: Locales vs Remotas](#9-rutas-locales-vs-remotas)
+10. [Buenas Prácticas y Recomendaciones](#10-buenas-prácticas-y-recomendaciones-)
+11. [Ejemplos Prácticos del Código Modelo](#11-ejemplos-prácticos-del-código-modelo)
+12. [Proyecto Práctico Sugerido](#12-proyecto-práctico-sugerido-)
 
 ---
 

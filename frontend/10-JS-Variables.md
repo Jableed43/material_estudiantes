@@ -1615,48 +1615,6 @@ Piensa en objetos de la vida real como variables:
 
 ---
 
-## 10. Buenas Prácticas y Recomendaciones ✅
-
-### Nomenclatura
-
-- **Variables y funciones**: `camelCase` (`nombreCompleto`, `calcularArea`)
-- **Constantes**: `UPPER_SNAKE_CASE` (`PI`, `MAX_USUARIOS`)
-- **Nombres descriptivos**: `edad` mejor que `e`, `calcularTotal` mejor que `calc`
-
-### Uso de Variables
-
-- ✅ Usar `const` por defecto
-- ✅ Usar `let` solo cuando necesites reasignar
-- ❌ Evitar `var` en código moderno
-- ✅ Declarar variables al inicio del scope
-
-### Comparaciones
-
-- ✅ Siempre usar `===` y `!==` (comparación estricta)
-- ❌ Evitar `==` y `!=` (pueden causar errores de tipo)
-
-### Funciones
-
-- ✅ Funciones pequeñas y con una sola responsabilidad
-- ✅ Nombres descriptivos que indiquen qué hace
-- ✅ Usar arrow functions cuando sea apropiado
-- ✅ Documentar funciones complejas con comentarios
-
-### Bucles
-
-- ✅ Usar `for` cuando conozcas el número de iteraciones
-- ✅ Usar `while` cuando la condición sea dinámica
-- ⚠️ Siempre actualizar la condición en `while` para evitar loops infinitos
-
-### Depuración
-
-- ✅ Usar `console.log()` para ver valores
-- ✅ Usar la consola del navegador (F12)
-- ✅ Revisar errores en la consola
-- ✅ Probar código paso a paso
-
----
-
 ## 11. Ejemplos Prácticos del Código Modelo
 
 ### Ejemplo 1: Variables y Scope (Tema 10)

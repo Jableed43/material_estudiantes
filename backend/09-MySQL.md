@@ -469,7 +469,7 @@ La clave foránea (FK) **no es parte de la clave primaria** en la tabla hija. Es
 
 ---
 
-## 3. Tipos de Datos y Restricciones
+## 4. Tipos de Datos y Restricciones
 
 Al definir columnas, debemos asignar un tipo de dato estricto.
 
@@ -581,7 +581,7 @@ CREATE TABLE usuarios (
 
 ---
 
-## 4. Normalización
+## 5. Normalización
 
 Proceso para organizar la base de datos reduciendo redundancia y mejorando la integridad de los datos.
 
@@ -626,7 +626,7 @@ CREATE TABLE libros (
 
 ---
 
-## 5. DDL - Data Definition Language
+## 6. DDL - Data Definition Language
 
 DDL (Lenguaje de Definición de Datos) se usa para crear, modificar y eliminar estructuras de base de datos.
 
@@ -757,7 +757,7 @@ DROP INDEX idx_nombre ON autores;
 
 ---
 
-## 6. DML - Data Manipulation Language
+## 7. DML - Data Manipulation Language
 
 DML (Lenguaje de Manipulación de Datos) se usa para insertar, consultar, actualizar y eliminar datos.
 
@@ -990,7 +990,7 @@ DELETE FROM autores;
 
 ---
 
-## 7. DCL - Data Control Language
+## 8. DCL - Data Control Language
 
 DCL (Lenguaje de Control de Datos) se usa para gestionar permisos y acceso a la base de datos.
 
@@ -1036,7 +1036,7 @@ REVOKE INSERT, UPDATE ON biblioteca.* FROM 'usuario'@'localhost';
 
 ---
 
-## 8. JOINs - Uniones entre Tablas
+## 9. JOINs - Uniones entre Tablas
 
 Los JOINs permiten combinar datos de múltiples tablas basándose en relaciones.
 
@@ -1143,7 +1143,7 @@ INNER JOIN libros l ON a.id_autor = l.id_autor;
 
 ---
 
-## 9. Funciones de Agregación
+## 10. Funciones de Agregación
 
 Las funciones de agregación realizan cálculos sobre un conjunto de filas y devuelven un único valor.
 
@@ -1224,7 +1224,7 @@ ORDER BY precio_promedio DESC;
 
 ---
 
-## 10. Triggers, Stored Procedures y Functions
+## 11. Triggers, Stored Procedures y Functions
 
 ### Triggers
 
@@ -1377,7 +1377,7 @@ DROP FUNCTION IF EXISTS GetCountryPopulation;
 
 ---
 
-## 11. Conexión desde Node.js
+## 12. Conexión desde Node.js
 
 ### Instalación
 
