@@ -18,6 +18,11 @@
 
 ## 1. Fundamentos: ¿Qué es una Base de Datos Relacional?
 
+### 📜 Origen Histórico
+
+**Edgar F. Codd (IBM) - 1970**: Pionero de las bases de datos relacionales. 
+En 1970, Codd publicó el modelo relacional que sentó las bases de las bases de datos modernas que conocemos hoy. Su trabajo revolucionó la forma en que almacenamos y gestionamos información.
+
 ### 📚 Analogía: La Biblioteca Organizada
 
 Imagina una biblioteca bien organizada:
@@ -47,6 +52,35 @@ Tu agenda de contactos:
 
 **Beneficio**: Si una empresa cambia de dirección, solo actualizas un registro y todos los contactos de esa empresa se ven actualizados.
 
+### 🏗️ ¿Dónde está la Base de Datos en un Sistema?
+
+**Arquitectura simplificada**:
+
+```
+Frontend
+├── Muestra datos
+└── Solicita información
+
+    ↓ (HTTP/API)
+
+Backend
+├── Calcula (Servicios)
+└── Consulta datos
+
+    ↓ (SQL)
+
+Base de Datos
+├── Almacena datos
+├── Organiza datos
+└── Gestiona datos
+```
+
+**Flujo de información**:
+1. **Frontend**: Muestra y solicita información al usuario
+2. **API**: Comunica entre frontend y backend
+3. **Backend**: Procesa lógica de negocio y realiza consultas
+4. **Base de Datos**: Almacena, organiza y gestiona los datos permanentemente
+
 Una **Base de Datos Relacional** es una forma de organizar datos en **tablas** que están conectadas entre sí mediante relaciones. La clave del modelo relacional es que evita la repetición de datos, permitiendo una gestión más eficiente y segura.
 
 ### Estructura Básica
@@ -59,10 +93,77 @@ Una **Base de Datos Relacional** es una forma de organizar datos en **tablas** q
 ### Características de las Bases de Datos Relacionales
 
 - ✅ **Esquema Estricto**: La estructura debe definirse antes de insertar datos
+  
+  **Ventajas (PRO)**:
+  - ✅ Ayuda en el orden y organización
+  - ✅ Brinda una estructura sólida para construir
+  - ✅ Garantiza consistencia de datos
+  - ✅ Facilita el mantenimiento
+  
+  **Desventajas (CONTRA)**:
+  - ⚠️ Gran inversión en diseño inicial
+  - ⚠️ Una vez que tenemos datos, cambiar la estructura es complejo
+  - ⚠️ Requiere planificación cuidadosa
+  
+  **Solución para cambios**: Migraciones
+  - Las migraciones permiten modificar la estructura de la base de datos
+  - Se crean scripts que transforman el esquema de forma controlada
+  - Permiten versionar los cambios en la estructura
+
 - ✅ **Integridad Referencial**: Las relaciones entre tablas se validan automáticamente
+  
+  **Beneficio clave**: 
+  - Permite complejizar datos, sin complejizar una tabla
+  - Se fragmenta la información, haciendo que sea más manejable
+  - Cada tabla se enfoca en un tema específico
+  - Las relaciones conectan la información de forma controlada
+
 - ✅ **ACID**: Garantiza Atomicidad, Consistencia, Aislamiento y Durabilidad
 - ✅ **Normalización**: Permite eliminar redundancia de datos
 - ✅ **SQL**: Lenguaje estándar para consultas y operaciones
+  
+  **Bases de Datos Relacionales que usan SQL**:
+  - MySQL
+  - PostgreSQL
+  - SQLite
+  - MariaDB
+  - Oracle
+  
+  **Nota**: Todas las bases de datos relacionales utilizan el mismo lenguaje SQL (con pequeñas diferencias entre ellas)
+
+### Tipos de Lenguajes de Programación
+
+**Lenguajes Imperativos**: Describen **CÓMO** hacer algo paso a paso
+- Ejemplos: JavaScript, TypeScript, Java, Python, Go, Ruby, Rust, C, C++
+- Describen una secuencia de comandos para alcanzar el objetivo
+- El programador controla cada paso del proceso
+
+**Lenguajes Declarativos**: Describen **QUÉ** se quiere obtener
+- Ejemplos: SQL, HTML, CSS
+- Describen el resultado final deseado
+- El lenguaje gestiona los pasos necesarios para lograrlo
+
+**SQL es Declarativo**:
+- ❌ No decimos: "itera por cada fila, compara, filtra, ordena..."
+- ✅ Decimos: "quiero todos los estudiantes mayores de 20 años"
+- MySQL decide la mejor forma de obtenerlos automáticamente
+
+**Ejemplo comparativo**:
+
+```javascript
+// IMPERATIVO (JavaScript): Cómo hacerlo
+const estudiantesMayores = [];
+for (let i = 0; i < estudiantes.length; i++) {
+    if (estudiantes[i].edad > 20) {
+        estudiantesMayores.push(estudiantes[i]);
+    }
+}
+```
+
+```sql
+-- DECLARATIVO (SQL): Qué queremos
+SELECT * FROM estudiantes WHERE edad > 20;
+```
 
 ---
 
@@ -350,10 +451,15 @@ Una columna (o conjunto de columnas) que identifica de forma **única** cada fil
 - ✅ **No Nula (`NOT NULL`)**: No puede estar vacía
 - ✅ **Inmutable**: Idealmente no debería cambiar
 
+**⚠️ Importante**: Es recomendable que la PRIMARY KEY tenga AUTO_INCREMENT
+- Facilita la inserción de datos (no necesitas especificar el ID)
+- Evita errores de duplicación
+- Garantiza valores únicos y secuenciales
+
 **Ejemplo:**
 ```sql
 CREATE TABLE autores (
-    id_autor INT PRIMARY KEY AUTO_INCREMENT,
+    id_autor INT PRIMARY KEY AUTO_INCREMENT,  -- ✅ Recomendado con AUTO_INCREMENT
     nombre VARCHAR(100) NOT NULL
 );
 ```
@@ -592,9 +698,39 @@ Si en `libros` guardamos el nombre del autor directamente:
 - Mayor riesgo de inconsistencias
 - Mayor uso de almacenamiento
 
+**Ejemplo práctico**: Si tengo usuarios que poseen nacionalidad, no tiene sentido que los datos del país estén en la tabla usuario.
+
 ### Solución: Normalización
 
-Crear tabla `autores` y referenciarla por ID:
+Crear tablas separadas y referenciarlas por ID:
+
+```sql
+-- ❌ MAL: Redundancia - Datos del país en cada usuario
+CREATE TABLE usuarios (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100),
+    nacionalidad VARCHAR(50),
+    codigo_pais VARCHAR(2),
+    capital VARCHAR(100)  -- Se repite para cada usuario del mismo país
+);
+
+-- ✅ BIEN: Normalizado - Tabla separada de países
+CREATE TABLE paises (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(50),
+    codigo VARCHAR(2) UNIQUE,
+    capital VARCHAR(100)
+);
+
+CREATE TABLE usuarios (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100),
+    pais_id INT,
+    FOREIGN KEY (pais_id) REFERENCES paises(id)
+);
+```
+
+**Otro ejemplo con autores y libros**:
 
 ```sql
 -- ❌ MAL: Redundancia
