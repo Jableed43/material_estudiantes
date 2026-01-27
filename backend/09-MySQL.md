@@ -600,6 +600,84 @@ Al definir columnas, debemos asignar un tipo de dato estricto.
 | **Lógico** | `BOOLEAN` | Verdadero/Falso (usualmente `TINYINT(1)`) | `TRUE`, `FALSE` |
 | **Binario** | `BLOB` | Datos binarios grandes | Imágenes, archivos |
 
+### Tipos de Datos Numéricos - Detalles y Rangos
+
+#### Enteros (Integer Types)
+
+| Tipo | Tamaño | Rango (con signo) | Rango (sin signo) | Uso recomendado |
+|------|--------|-------------------|-------------------|-----------------|
+| `TINYINT` | 1 byte | -128 a 127 | 0 a 255 | Booleanos, estados pequeños, códigos |
+| `SMALLINT` | 2 bytes | -32,768 a 32,767 | 0 a 65,535 | Contadores pequeños, años, códigos |
+| `INT` o `INTEGER` | 4 bytes | -2,147,483,648 a 2,147,483,647 | 0 a 4,294,967,295 | IDs, edades, cantidades (más común) |
+| `BIGINT` | 8 bytes | -9,223,372,036,854,775,808 a 9,223,372,036,854,775,807 | 0 a 18,446,744,073,709,551,615 | IDs muy grandes, timestamps grandes |
+
+**Ejemplos:**
+```sql
+-- TINYINT para booleanos
+activo TINYINT(1)  -- 0 o 1
+
+-- SMALLINT para años
+año SMALLINT  -- Años (1900-2155)
+
+-- INT para IDs (más común)
+id INT PRIMARY KEY AUTO_INCREMENT
+
+-- BIGINT para sistemas de gran escala
+id_usuario BIGINT PRIMARY KEY AUTO_INCREMENT
+```
+
+#### Decimales Exactos (Fixed-Point)
+
+| Tipo | Precisión | Tamaño | Uso recomendado |
+|------|-----------|--------|------------------|
+| `DECIMAL(p, s)` o `NUMERIC(p, s)` | Exacta | Variable según `p` | Dinero, precios, medidas que requieren precisión exacta |
+
+**Parámetros:**
+- `p` = Precisión total (total de dígitos)
+- `s` = Escala (dígitos después del punto decimal)
+
+**Ejemplos:**
+```sql
+precio DECIMAL(10, 2)      -- 99999999.99 (8 dígitos antes, 2 después)
+nota DECIMAL(4, 2)         -- 99.99 (2 dígitos antes, 2 después)
+porcentaje DECIMAL(5, 2)   -- 999.99 (3 dígitos antes, 2 después)
+```
+
+#### Decimales Aproximados (Floating-Point)
+
+| Tipo | Tamaño | Precisión | Rango aproximado | Uso recomendado |
+|------|--------|-----------|------------------|-----------------|
+| `FLOAT` | 4 bytes | ~7 dígitos decimales | ±3.4E38 | Cálculos científicos, mediciones |
+| `DOUBLE` o `DOUBLE PRECISION` | 8 bytes | ~15 dígitos decimales | ±1.7E308 | Cálculos científicos más precisos |
+
+**⚠️ Importante:** `FLOAT` y `DOUBLE` tienen precisión aproximada (pueden tener errores de redondeo). Para dinero o valores que requieren precisión exacta, usar `DECIMAL`.
+
+**Ejemplos:**
+```sql
+-- FLOAT para mediciones
+temperatura FLOAT
+altura FLOAT
+
+-- DOUBLE para coordenadas
+coordenada_latitud DOUBLE
+coordenada_longitud DOUBLE
+```
+
+#### Comparación: DECIMAL vs FLOAT/DOUBLE
+
+| Característica | DECIMAL | FLOAT/DOUBLE |
+|----------------|---------|--------------|
+| **Precisión** | Exacta | Aproximada |
+| **Uso para dinero** | ✅ Recomendado | ❌ No recomendado |
+| **Uso para cálculos científicos** | ⚠️ Posible pero lento | ✅ Recomendado |
+| **Errores de redondeo** | ❌ No tiene | ✅ Puede tener |
+
+**Regla de oro:**
+- 💰 **Para dinero/precios**: Usa `DECIMAL(10,2)` o `DECIMAL(19,4)`
+- 🔬 **Para cálculos científicos**: Usa `FLOAT` o `DOUBLE`
+- 🔢 **Para IDs**: Usa `INT` (suficiente en la mayoría de casos)
+- ✅ **Para booleanos**: Usa `TINYINT(1)` o `BOOLEAN`
+
 ### Restricciones (Constraints)
 
 #### PRIMARY KEY
