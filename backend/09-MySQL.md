@@ -4,15 +4,22 @@
 1. [Fundamentos: ¿Qué es una Base de Datos Relacional?](#1-fundamentos-qué-es-una-base-de-datos-relacional)
 2. [ACID: Propiedades de las Transacciones](#2-acid-propiedades-de-las-transacciones)
 3. [Claves y Relaciones](#3-claves-y-relaciones)
+   - [ON DELETE: Comportamiento al Eliminar Registros Relacionados](#-on-delete-comportamiento-al-eliminar-registros-relacionados)
+   - [Visualización de Relaciones N:M con Tabla Intermedia](#-visualización-de-relaciones-nm-con-tabla-intermedia)
 4. [Tipos de Datos y Restricciones](#4-tipos-de-datos-y-restricciones)
 5. [Normalización](#5-normalización)
 6. [DDL - Data Definition Language](#6-ddl---data-definition-language)
 7. [DML - Data Manipulation Language](#7-dml---data-manipulation-language)
 8. [DCL - Data Control Language](#8-dcl---data-control-language)
 9. [JOINs - Uniones entre Tablas](#9-joins---uniones-entre-tablas)
+   - [Comparación Visual: INNER vs LEFT vs RIGHT JOIN](#comparación-visual-inner-vs-left-vs-right-join)
+   - [¿Cuándo usar cada tipo de JOIN?](#cuándo-usar-cada-tipo-de-join)
+   - [Encontrar Datos Sin Relaciones](#encontrar-datos-sin-relaciones)
+   - [Errores Comunes con JOINs y Relaciones](#errores-comunes-con-joins-y-relaciones)
 10. [Funciones de Agregación](#10-funciones-de-agregación)
 11. [Triggers, Stored Procedures y Functions](#11-triggers-stored-procedures-y-functions)
 12. [Conexión desde Node.js](#12-conexión-desde-nodejs)
+13. [Ejercicios Prácticos con Base de Datos Escuela](#-ejercicios-prácticos-con-base-de-datos-escuela)
 
 ---
 
@@ -483,6 +490,130 @@ CREATE TABLE libros (
 );
 ```
 
+##### 🔄 ON DELETE: Comportamiento al Eliminar Registros Relacionados
+
+**¿Qué pasa si NO especificas ON DELETE?**
+
+Si creas una clave foránea sin especificar `ON DELETE`:
+```sql
+FOREIGN KEY (id_estudiante) REFERENCES estudiantes(id)
+-- Sin ON DELETE especificado
+```
+
+MySQL usa `ON DELETE RESTRICT` por defecto. Esto significa:
+- ❌ **NO puedes eliminar** un registro padre si tiene hijos que lo referencian
+- La eliminación **falla con error**
+- No se elimina nada, **no quedan datos NULL ni huérfanos**
+- Garantiza **integridad referencial**
+
+**Ejemplo práctico:**
+```sql
+-- Intentar eliminar estudiante con inscripciones (SIN CASCADE)
+DELETE FROM estudiantes WHERE id = 1;
+
+-- Resultado: ERROR
+-- Error Code: 1451. Cannot delete or update a parent row: 
+-- a foreign key constraint fails
+```
+
+**¿Es obligatorio especificar ON DELETE RESTRICT?**
+
+**No**, no es obligatorio. Si no lo especificas, MySQL usa `RESTRICT` por defecto.
+
+```sql
+-- Opción 1: Sin especificar (RESTRICT por defecto)
+FOREIGN KEY (id_materia) REFERENCES materias(id)
+
+-- Opción 2: Explícitamente RESTRICT (más claro)
+FOREIGN KEY (id_materia) REFERENCES materias(id)
+ON DELETE RESTRICT
+```
+
+**Comparación de Comportamientos:**
+
+| Comportamiento | ¿Se elimina el padre? | ¿Qué pasa con los hijos? | ¿Datos NULL? | ¿Datos huérfanos? |
+|----------------|----------------------|--------------------------|--------------|-------------------|
+| **RESTRICT** (por defecto) | ❌ No (error) | Se mantienen | ❌ No | ❌ No |
+| **CASCADE** | ✅ Sí | Se eliminan automáticamente | ❌ No | ❌ No |
+| **SET NULL** | ✅ Sí | Clave foránea = NULL | ✅ Sí | ⚠️ Sí (huérfanos) |
+| **NO ACTION** | ❌ No (error) | Se mantienen | ❌ No | ❌ No |
+
+**Ejemplos Prácticos:**
+
+**Ejemplo 1: RESTRICT (por defecto)**
+```sql
+-- Intentar eliminar materia con inscripciones
+DELETE FROM materias WHERE id = 1;
+-- ❌ ERROR: Cannot delete or update a parent row
+-- La materia NO se elimina, las inscripciones se mantienen
+```
+
+**Ejemplo 2: CASCADE**
+```sql
+-- Crear tabla con CASCADE
+CREATE TABLE inscripciones (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_estudiante INT NOT NULL,
+    id_materia INT NOT NULL,
+    FOREIGN KEY (id_estudiante) REFERENCES estudiantes(id) 
+        ON DELETE CASCADE  -- Si eliminas estudiante, elimina sus inscripciones
+);
+
+-- Eliminar estudiante con inscripciones
+DELETE FROM estudiantes WHERE id = 1;
+-- ✅ Estudiante eliminado
+-- ✅ Las inscripciones se eliminan automáticamente
+```
+
+**Ejemplo 3: SET NULL**
+```sql
+-- Crear tabla con SET NULL (requiere que la columna permita NULL)
+CREATE TABLE inscripciones (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_estudiante INT NULL,  -- Debe permitir NULL
+    id_materia INT NOT NULL,
+    FOREIGN KEY (id_estudiante) REFERENCES estudiantes(id) 
+        ON DELETE SET NULL
+);
+
+-- Eliminar estudiante
+DELETE FROM estudiantes WHERE id = 1;
+-- ✅ Estudiante eliminado
+-- ⚠️ Las inscripciones quedan con id_estudiante = NULL (datos huérfanos)
+```
+
+**¿Cuándo usar cada uno?**
+
+- **CASCADE**: Cuando los registros hijos no tienen sentido sin el padre
+  - Ejemplo: Inscripciones sin estudiante no tienen sentido
+  - Ejemplo: Pedidos sin usuario no tienen sentido
+  
+- **RESTRICT**: Cuando necesitas proteger datos importantes
+  - Ejemplo: No eliminar una materia si tiene estudiantes inscritos
+  - Ejemplo: No eliminar un autor si tiene libros publicados
+  
+- **SET NULL**: Cuando quieres mantener los registros hijos pero sin relación
+  - Ejemplo: Mantener historial de pedidos aunque se elimine el usuario
+  - ⚠️ Cuidado: Puede dejar datos huérfanos
+
+**En la práctica:**
+```sql
+-- Ejemplo común: Base de datos escuela
+CREATE TABLE inscripciones (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_estudiante INT NOT NULL,
+    id_materia INT NOT NULL,
+    fecha_inscripcion DATE NOT NULL,
+    nota DECIMAL(4,2) DEFAULT NULL,
+    -- CASCADE: Si eliminas estudiante, elimina sus inscripciones
+    FOREIGN KEY (id_estudiante) REFERENCES estudiantes(id) 
+        ON DELETE CASCADE,
+    -- RESTRICT: No puedes eliminar materia si tiene inscripciones
+    FOREIGN KEY (id_materia) REFERENCES materias(id) 
+        ON DELETE RESTRICT
+);
+```
+
 #### 3. Clave Única (`UNIQUE`)
 Garantiza que los valores en una columna sean únicos (permite NULL).
 
@@ -564,6 +695,51 @@ CREATE TABLE prestamos (
     FOREIGN KEY (id_lector) REFERENCES lectores(id_lector)
 );
 ```
+
+##### 📊 Visualización de Relaciones N:M con Tabla Intermedia
+
+**Ejemplo: Estudiantes y Materias**
+
+```
+┌─────────────┐         ┌──────────────┐         ┌─────────────┐
+│ estudiantes │         │ inscripciones│         │   materias  │
+├─────────────┤         ├──────────────┤         ├─────────────┤
+│ id (PK)     │◄──┐     │ id (PK)      │     ┌──►│ id (PK)     │
+│ nombre      │   │     │ id_estudiante│     │   │ nombre      │
+│ apellido    │   │     │ id_materia   │◄────┘   │ codigo      │
+│ email       │   │     │ fecha        │         │ creditos    │
+│ edad        │   │     │ nota         │         └─────────────┘
+└─────────────┘   │     └──────────────┘
+                  │
+                  └─── FOREIGN KEY (ON DELETE CASCADE)
+```
+
+**Flujo de datos en una relación N:M:**
+1. Estudiante (id=1) se inscribe en Materia (id=1)
+2. Se crea registro en `inscripciones` (id_estudiante=1, id_materia=1)
+3. La clave foránea garantiza que ambos IDs existan
+4. Si eliminas el estudiante (CASCADE), se eliminan sus inscripciones automáticamente
+5. Si intentas eliminar la materia (RESTRICT), MySQL no te permite si tiene inscripciones
+
+**Ejemplo concreto:**
+```
+Estudiante: Juan Pérez (id=1)
+  ↓ (tiene inscripciones)
+Inscripción 1: id_estudiante=1, id_materia=1 (Programación I)
+Inscripción 2: id_estudiante=1, id_materia=2 (Base de Datos)
+  → Juan está inscrito en 2 materias ✅
+
+Materia: Programación I (id=1)
+  ↓ (tiene inscripciones)
+Inscripción 1: id_estudiante=1, id_materia=1 (Juan Pérez)
+Inscripción 3: id_estudiante=2, id_materia=1 (María González)
+  → Programación I tiene 2 estudiantes ✅
+```
+
+**¿Por qué necesitamos una tabla intermedia para N:M?**
+- Si intentáramos poner `id_materia` en la tabla `estudiantes`, solo podríamos guardar UNA materia por estudiante
+- Si intentáramos poner `id_estudiante` en la tabla `materias`, solo podríamos guardar UN estudiante por materia
+- La tabla intermedia permite: **muchos estudiantes ↔ muchas materias**
 
 ### Tipos de Relaciones en Diagramas (ERD)
 
@@ -1355,6 +1531,349 @@ FROM autores a
 INNER JOIN libros l ON a.id_autor = l.id_autor;
 ```
 
+### Comparación Visual: INNER vs LEFT vs RIGHT JOIN
+
+Usando la misma base de datos `escuela` con:
+- 30 estudiantes (algunos sin inscripciones)
+- 30 materias (algunas sin estudiantes)
+- Inscripciones variadas
+
+#### Ejemplo 1: INNER JOIN - Solo Coincidencias
+
+```sql
+SELECT 
+    e.nombre, 
+    e.apellido, 
+    m.nombre as materia,
+    i.nota
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+INNER JOIN materias m ON i.id_materia = m.id
+ORDER BY e.apellido, m.nombre;
+```
+
+**Resultado**: Aproximadamente 60-70 filas (solo coincidencias)
+- ✅ Muestra SOLO estudiantes que tienen inscripciones
+- ✅ Muestra SOLO materias que tienen estudiantes
+- ❌ NO muestra estudiantes sin inscripciones (ej: estudiantes 16-20, 25, 28, 30)
+- ❌ NO muestra materias sin estudiantes (ej: materias 24, 27-30)
+
+**Visualización**:
+```
+Estudiantes con inscripciones → ✅ Aparecen
+Estudiantes sin inscripciones → ❌ NO aparecen
+Materias con estudiantes → ✅ Aparecen
+Materias sin estudiantes → ❌ NO aparecen
+```
+
+#### Ejemplo 2: LEFT JOIN - Todos los Estudiantes
+
+```sql
+SELECT 
+    e.nombre, 
+    e.apellido, 
+    m.nombre as materia,
+    i.nota
+FROM estudiantes e
+LEFT JOIN inscripciones i ON e.id = i.id_estudiante
+LEFT JOIN materias m ON i.id_materia = m.id
+ORDER BY e.apellido, m.nombre;
+```
+
+**Resultado**: Más de 70 filas (todos los estudiantes)
+- ✅ Muestra TODOS los estudiantes (30 estudiantes)
+- ✅ Estudiantes con inscripciones: muestran sus materias
+- ⚠️ Estudiantes SIN inscripciones: muestran NULL en materia y nota
+- ❌ NO muestra materias sin estudiantes
+
+**Ejemplo de filas con NULL**:
+```
+nombre    | apellido  | materia | nota
+Diego     | Morales   | NULL    | NULL  ← Estudiante sin inscripciones
+Emma      | Rivera    | NULL    | NULL  ← Estudiante sin inscripciones
+Benjamin  | Ortiz     | NULL    | NULL  ← Estudiante sin inscripciones
+```
+
+**Visualización**:
+```
+Estudiantes con inscripciones → ✅ Aparecen con sus materias
+Estudiantes sin inscripciones → ⚠️ Aparecen con NULL
+Materias con estudiantes → ✅ Aparecen
+Materias sin estudiantes → ❌ NO aparecen
+```
+
+#### Ejemplo 3: RIGHT JOIN - Todas las Materias
+
+```sql
+SELECT 
+    e.nombre, 
+    e.apellido, 
+    m.nombre as materia,
+    m.codigo,
+    i.nota
+FROM estudiantes e
+RIGHT JOIN inscripciones i ON e.id = i.id_estudiante
+RIGHT JOIN materias m ON i.id_materia = m.id
+ORDER BY m.nombre, e.apellido;
+```
+
+**Resultado**: Más de 70 filas (todas las materias)
+- ✅ Muestra TODAS las materias (30 materias)
+- ✅ Materias con estudiantes: muestran los estudiantes inscritos
+- ⚠️ Materias SIN estudiantes: muestran NULL en nombre, apellido y nota
+- ❌ NO muestra estudiantes sin inscripciones
+
+**Ejemplo de filas con NULL**:
+```
+nombre | apellido | materia                    | codigo | nota
+NULL   | NULL     | Comunicación               | COM1   | NULL  ← Materia sin estudiantes
+NULL   | NULL     | Proyecto Integrador II     | PI2    | NULL  ← Materia sin estudiantes
+NULL   | NULL     | Prácticas Profesionales    | PP1    | NULL  ← Materia sin estudiantes
+```
+
+**Visualización**:
+```
+Estudiantes con inscripciones → ✅ Aparecen
+Estudiantes sin inscripciones → ❌ NO aparecen
+Materias con estudiantes → ✅ Aparecen con sus estudiantes
+Materias sin estudiantes → ⚠️ Aparecen con NULL
+```
+
+#### Tabla Comparativa de JOINs
+
+| Tipo de JOIN | ¿Qué muestra? | ¿Muestra NULL? | Casos de uso |
+|--------------|---------------|----------------|--------------|
+| **INNER JOIN** | Solo coincidencias | ❌ No | Ver solo datos relacionados |
+| **LEFT JOIN** | Todos de la izquierda | ✅ Sí (derecha) | Ver todos los estudiantes |
+| **RIGHT JOIN** | Todos de la derecha | ✅ Sí (izquierda) | Ver todas las materias |
+
+#### Comparación de Cantidades
+
+```sql
+-- 1. INNER JOIN - Solo coincidencias
+SELECT COUNT(*) as total_filas_inner
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+INNER JOIN materias m ON i.id_materia = m.id;
+-- Resultado: ~60-70 filas
+
+-- 2. LEFT JOIN - Todos los estudiantes
+SELECT COUNT(*) as total_filas_left
+FROM estudiantes e
+LEFT JOIN inscripciones i ON e.id = i.id_estudiante
+LEFT JOIN materias m ON i.id_materia = m.id;
+-- Resultado: ~75-85 filas (más porque incluye estudiantes sin inscripciones)
+
+-- 3. RIGHT JOIN - Todas las materias
+SELECT COUNT(*) as total_filas_right
+FROM estudiantes e
+RIGHT JOIN inscripciones i ON e.id = i.id_estudiante
+RIGHT JOIN materias m ON i.id_materia = m.id;
+-- Resultado: ~75-85 filas (más porque incluye materias sin estudiantes)
+```
+
+**¿Por qué LEFT y RIGHT tienen más filas?**
+- **LEFT**: Incluye estudiantes sin inscripciones (aparecen con NULL)
+- **RIGHT**: Incluye materias sin estudiantes (aparecen con NULL)
+
+### ¿Cuándo usar cada tipo de JOIN?
+
+#### Usa INNER JOIN cuando:
+- ✅ Solo necesitas datos que tienen relación
+- ✅ Quieres ver solo coincidencias
+- ✅ Ejemplo: Ver inscripciones con nombres (solo las que existen)
+- ✅ Ejemplo: Ver pedidos con información del cliente (solo pedidos con cliente)
+
+#### Usa LEFT JOIN cuando:
+- ✅ Necesitas TODOS los registros de la tabla izquierda
+- ✅ Quieres ver registros incluso sin relación
+- ✅ Ejemplo: Listar todos los estudiantes, incluso sin materias
+- ✅ Ejemplo: Listar todos los clientes, incluso sin pedidos
+- ✅ Útil para encontrar registros "huérfanos" (con WHERE IS NULL)
+
+#### Usa RIGHT JOIN cuando:
+- ✅ Necesitas TODOS los registros de la tabla derecha
+- ✅ Ejemplo: Listar todas las materias, incluso sin estudiantes
+- ✅ Ejemplo: Listar todos los productos, incluso sin pedidos
+- ⚠️ **Nota**: Se puede lograr lo mismo con LEFT JOIN cambiando el orden de las tablas
+
+#### Pregunta clave para decidir:
+**¿Qué tabla es más importante en tu consulta?**
+- Si la tabla izquierda → **LEFT JOIN**
+- Si la tabla derecha → **RIGHT JOIN**
+- Si solo coincidencias → **INNER JOIN**
+
+### Encontrar Datos Sin Relaciones
+
+#### Estudiantes Sin Inscripciones (LEFT JOIN + WHERE IS NULL)
+
+```sql
+SELECT 
+    e.nombre, 
+    e.apellido, 
+    e.email
+FROM estudiantes e
+LEFT JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE i.id IS NULL
+ORDER BY e.apellido;
+```
+
+**Explicación**:
+- `LEFT JOIN` trae todos los estudiantes
+- `WHERE i.id IS NULL` filtra solo los que no tienen inscripciones (el JOIN devolvió NULL)
+
+**Resultado esperado**: Estudiantes que no están inscritos en ninguna materia
+
+#### Materias Sin Estudiantes (RIGHT JOIN + WHERE IS NULL)
+
+```sql
+SELECT 
+    m.nombre,
+    m.codigo,
+    m.creditos
+FROM inscripciones i
+RIGHT JOIN materias m ON i.id_materia = m.id
+WHERE i.id IS NULL
+ORDER BY m.nombre;
+```
+
+**Explicación**:
+- `RIGHT JOIN` trae todas las materias
+- `WHERE i.id IS NULL` filtra solo las que no tienen inscripciones
+
+**Resultado esperado**: Materias que no tienen ningún estudiante inscrito
+
+**Alternativa con LEFT JOIN** (mismo resultado):
+```sql
+SELECT 
+    m.nombre,
+    m.codigo,
+    m.creditos
+FROM materias m
+LEFT JOIN inscripciones i ON m.id = i.id_materia
+WHERE i.id IS NULL
+ORDER BY m.nombre;
+```
+
+### Errores Comunes con JOINs y Relaciones
+
+#### Error 1: "Cannot delete or update a parent row: a foreign key constraint fails"
+
+**Problema**: Intentas eliminar un registro padre que tiene hijos que lo referencian.
+
+**Ejemplo**:
+```sql
+-- Intentar eliminar estudiante con inscripciones (RESTRICT por defecto)
+DELETE FROM estudiantes WHERE id = 1;
+-- ❌ ERROR: Cannot delete or update a parent row
+```
+
+**Soluciones**:
+1. **Eliminar primero los hijos**:
+```sql
+-- Primero eliminar las inscripciones
+DELETE FROM inscripciones WHERE id_estudiante = 1;
+-- Ahora sí puedes eliminar el estudiante
+DELETE FROM estudiantes WHERE id = 1;
+```
+
+2. **Usar ON DELETE CASCADE** (si tiene sentido):
+```sql
+-- Recrear tabla con CASCADE
+ALTER TABLE inscripciones
+DROP FOREIGN KEY inscripciones_ibfk_1;
+
+ALTER TABLE inscripciones
+ADD CONSTRAINT fk_estudiante 
+FOREIGN KEY (id_estudiante) REFERENCES estudiantes(id) 
+ON DELETE CASCADE;
+```
+
+#### Error 2: "Cannot add or update a child row: foreign key constraint fails"
+
+**Problema**: Intentas insertar un registro hijo con un ID que no existe en la tabla padre.
+
+**Ejemplo**:
+```sql
+-- Intentar insertar inscripción con estudiante inexistente
+INSERT INTO inscripciones (id_estudiante, id_materia, fecha_inscripcion) 
+VALUES (999, 1, '2025-01-15');
+-- ❌ ERROR: Cannot add or update a child row
+```
+
+**Solución**: Verificar que el ID exista antes de insertar:
+```sql
+-- Verificar que el estudiante existe
+SELECT id FROM estudiantes WHERE id = 999;
+-- Si no existe, usar un ID válido o crear el estudiante primero
+```
+
+#### Error 3: LEFT JOIN muestra más filas de las esperadas
+
+**Problema**: Un estudiante con múltiples materias aparece varias veces (una por cada materia).
+
+**Ejemplo**:
+```sql
+SELECT e.nombre, e.apellido, m.nombre as materia
+FROM estudiantes e
+LEFT JOIN inscripciones i ON e.id = i.id_estudiante
+LEFT JOIN materias m ON i.id_materia = m.id;
+-- Resultado: Juan Pérez aparece 3 veces (una por cada materia)
+```
+
+**Explicación**: Es normal. Cada relación genera una fila. Si un estudiante tiene 3 materias, aparecerá 3 veces.
+
+**Si necesitas valores únicos**, usa `DISTINCT`:
+```sql
+SELECT DISTINCT e.nombre, e.apellido
+FROM estudiantes e
+LEFT JOIN inscripciones i ON e.id = i.id_estudiante;
+```
+
+#### Error 4: Olvidar el `ON` en JOIN
+
+**Problema**: Crear un JOIN sin especificar la condición.
+
+**Ejemplo incorrecto**:
+```sql
+SELECT e.nombre, m.nombre
+FROM estudiantes e
+INNER JOIN materias m;  -- ❌ Falta ON
+-- ERROR: Syntax error
+```
+
+**Solución**: Siempre incluir la condición `ON`:
+```sql
+SELECT e.nombre, m.nombre
+FROM estudiantes e
+INNER JOIN materias m ON e.id = m.id;  -- ✅ Correcto
+```
+
+#### Error 5: Confundir WHERE y HAVING con JOINs
+
+**Problema**: Usar `HAVING` para filtrar filas individuales en lugar de `WHERE`.
+
+**Ejemplo incorrecto**:
+```sql
+SELECT e.nombre, COUNT(i.id) as total_materias
+FROM estudiantes e
+LEFT JOIN inscripciones i ON e.id = i.id_estudiante
+HAVING total_materias > 2;  -- ⚠️ Funciona pero no es lo ideal
+```
+
+**Solución correcta**:
+```sql
+SELECT e.nombre, COUNT(i.id) as total_materias
+FROM estudiantes e
+LEFT JOIN inscripciones i ON e.id = i.id_estudiante
+GROUP BY e.id, e.nombre
+HAVING COUNT(i.id) > 2;  -- ✅ HAVING filtra grupos, no filas
+```
+
+**Regla general**:
+- `WHERE`: Filtra filas individuales (antes de agrupar)
+- `HAVING`: Filtra grupos (después de agrupar con GROUP BY)
+
 ---
 
 ## 10. Funciones de Agregación
@@ -1419,15 +1938,116 @@ FROM productos
 GROUP BY categoria;
 ```
 
+### Funciones de Formato de Números
+
+#### ROUND - Redondear
+
+Redondea un número a un número específico de decimales.
+
+```sql
+-- Redondear a 2 decimales (más común)
+SELECT ROUND(AVG(precio), 2) as precio_promedio FROM productos;
+
+-- Redondear a 0 decimales (entero)
+SELECT ROUND(123.456, 0);  -- Resultado: 123
+
+-- Redondear a 1 decimal
+SELECT ROUND(123.456, 1);  -- Resultado: 123.5
+
+-- Ejemplo práctico: Promedio de notas de estudiantes
+SELECT 
+    e.nombre,
+    e.apellido,
+    ROUND(AVG(i.nota), 2) as promedio_notas
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE i.nota IS NOT NULL
+GROUP BY e.id, e.nombre, e.apellido;
+```
+
+#### TRUNCATE - Truncar (Cortar)
+
+Trunca un número a un número específico de decimales **sin redondear**.
+
+```sql
+-- Truncar a 2 decimales
+SELECT TRUNCATE(123.456, 2);  -- Resultado: 123.45
+
+-- Truncar a 0 decimales
+SELECT TRUNCATE(123.456, 0);  -- Resultado: 123
+
+-- Ejemplo práctico: Promedio truncado por materia
+SELECT 
+    m.nombre as materia,
+    TRUNCATE(AVG(i.nota), 1) as promedio_truncado
+FROM materias m
+INNER JOIN inscripciones i ON m.id = i.id_materia
+WHERE i.nota IS NOT NULL
+GROUP BY m.id, m.nombre;
+```
+
+**Diferencia ROUND vs TRUNCATE:**
+- `ROUND(123.456, 2)` → `123.46` (redondea hacia arriba)
+- `TRUNCATE(123.456, 2)` → `123.45` (solo corta)
+
+#### FORMAT - Formatear con Separadores
+
+Formatea un número con separadores de miles y decimales.
+
+```sql
+-- Formatear con separadores de miles
+SELECT FORMAT(1234567.89, 2);  -- Resultado: '1,234,567.89'
+
+-- Formatear sin decimales
+SELECT FORMAT(1234567, 0);  -- Resultado: '1,234,567'
+
+-- Ejemplo práctico: Total de créditos formateado
+SELECT 
+    e.nombre,
+    e.apellido,
+    FORMAT(SUM(m.creditos), 0) as total_creditos_formateado
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+INNER JOIN materias m ON i.id_materia = m.id
+GROUP BY e.id, e.nombre, e.apellido;
+```
+
+**⚠️ Nota:** `FORMAT` devuelve un string, no un número. Útil para mostrar datos pero no para cálculos.
+
+#### CAST / CONVERT - Convertir Tipos
+
+Convierte un valor a otro tipo de dato.
+
+```sql
+-- Convertir DECIMAL a INT (trunca decimales)
+SELECT CAST(123.456 AS UNSIGNED);  -- Resultado: 123
+
+-- Convertir string a número
+SELECT CAST('123' AS UNSIGNED);  -- Resultado: 123
+
+-- Sintaxis alternativa con CONVERT
+SELECT CONVERT(123.456, UNSIGNED);  -- Resultado: 123
+
+-- Ejemplo práctico: Promedio como entero
+SELECT 
+    e.nombre,
+    e.apellido,
+    CAST(ROUND(AVG(i.nota), 0) AS UNSIGNED) as promedio_entero
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE i.nota IS NOT NULL
+GROUP BY e.id, e.nombre, e.apellido;
+```
+
 ### Ejemplos Combinados
 
 ```sql
--- Estadísticas por categoría
+-- Estadísticas por categoría con formato
 SELECT 
     categoria,
     COUNT(*) as total_productos,
-    SUM(precio) as total_ventas,
-    AVG(precio) as precio_promedio,
+    FORMAT(SUM(precio), 2) as total_ventas,
+    ROUND(AVG(precio), 2) as precio_promedio,
     MIN(precio) as precio_minimo,
     MAX(precio) as precio_maximo
 FROM productos
@@ -1758,6 +2378,317 @@ app.listen(3000, () => {
   console.log('Servidor en puerto 3000');
 });
 ```
+
+---
+
+## 🎯 Ejercicios Prácticos con Base de Datos Escuela
+
+Estos ejercicios te ayudarán a practicar JOINs, relaciones y consultas complejas usando la base de datos `escuela` con las tablas `estudiantes`, `materias` e `inscripciones`.
+
+### Ejercicio 1: Verificar Integridad Referencial
+
+**Objetivo**: Verificar que no haya inscripciones con IDs inválidos (datos huérfanos).
+
+```sql
+-- Verificar que todas las inscripciones tienen estudiantes y materias válidos
+SELECT 
+    i.id as id_inscripcion,
+    i.id_estudiante,
+    i.id_materia,
+    CASE WHEN e.id IS NULL THEN 'ERROR: Estudiante no existe' ELSE 'OK' END as estudiante_valido,
+    CASE WHEN m.id IS NULL THEN 'ERROR: Materia no existe' ELSE 'OK' END as materia_valida
+FROM inscripciones i
+LEFT JOIN estudiantes e ON i.id_estudiante = e.id
+LEFT JOIN materias m ON i.id_materia = m.id
+WHERE e.id IS NULL OR m.id IS NULL;
+```
+
+**Resultado esperado**: 
+- Si la integridad referencial funciona correctamente, esta consulta **NO debe devolver resultados**
+- Si devuelve filas, significa que hay datos corruptos (inscripciones con IDs inválidos)
+
+**Explicación**:
+- `LEFT JOIN` trae todas las inscripciones
+- Si el estudiante o materia no existe, el JOIN devuelve NULL
+- `WHERE e.id IS NULL OR m.id IS NULL` filtra solo los casos problemáticos
+
+### Ejercicio 2: Estadísticas de Notas por Materia
+
+**Objetivo**: Calcular el promedio de notas, cantidad de estudiantes y nota máxima por materia.
+
+```sql
+SELECT 
+    m.nombre as materia,
+    m.codigo,
+    COUNT(i.id) as total_estudiantes,
+    COUNT(i.nota) as estudiantes_con_nota,
+    AVG(i.nota) as promedio_notas,
+    MAX(i.nota) as nota_maxima,
+    MIN(i.nota) as nota_minima
+FROM materias m
+LEFT JOIN inscripciones i ON m.id = i.id_materia
+WHERE i.nota IS NOT NULL  -- Solo materias con notas
+GROUP BY m.id, m.nombre, m.codigo
+HAVING COUNT(i.nota) > 0  -- Solo materias con al menos una nota
+ORDER BY promedio_notas DESC;
+```
+
+**Resultado esperado**: 
+- Lista de materias con estadísticas de notas
+- Ordenadas de mayor a menor promedio
+
+**Explicación**:
+- `LEFT JOIN` incluye todas las materias
+- `WHERE i.nota IS NOT NULL` filtra solo inscripciones con notas
+- `GROUP BY` agrupa por materia
+- `HAVING` filtra grupos (materias con al menos una nota)
+- Funciones de agregación calculan estadísticas
+
+### Ejercicio 3: Estudiantes con Múltiples Materias
+
+**Objetivo**: Encontrar estudiantes que están inscritos en más de 2 materias.
+
+```sql
+SELECT 
+    e.nombre,
+    e.apellido,
+    e.email,
+    COUNT(i.id) as total_materias,
+    GROUP_CONCAT(m.nombre SEPARATOR ', ') as materias
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+INNER JOIN materias m ON i.id_materia = m.id
+GROUP BY e.id, e.nombre, e.apellido, e.email
+HAVING COUNT(i.id) > 2
+ORDER BY total_materias DESC, e.apellido;
+```
+
+**Resultado esperado**: 
+- Estudiantes con más de 2 materias
+- Lista de materias separadas por comas
+
+**Explicación**:
+- `INNER JOIN` solo incluye estudiantes con inscripciones
+- `GROUP BY` agrupa por estudiante
+- `GROUP_CONCAT` concatena los nombres de las materias
+- `HAVING COUNT(i.id) > 2` filtra solo estudiantes con más de 2 materias
+
+### Ejercicio 4: Materias Más Populares
+
+**Objetivo**: Encontrar las materias con más estudiantes inscritos.
+
+```sql
+SELECT 
+    m.nombre as materia,
+    m.codigo,
+    COUNT(i.id_estudiante) as total_inscritos,
+    COUNT(DISTINCT i.id_estudiante) as estudiantes_unicos
+FROM materias m
+LEFT JOIN inscripciones i ON m.id = i.id_materia
+GROUP BY m.id, m.nombre, m.codigo
+ORDER BY total_inscritos DESC
+LIMIT 10;
+```
+
+**Resultado esperado**: 
+- Top 10 materias con más inscripciones
+- Incluye materias sin estudiantes (aparecerán con 0)
+
+**Explicación**:
+- `LEFT JOIN` incluye todas las materias
+- `COUNT(i.id_estudiante)` cuenta inscripciones (puede haber duplicados si un estudiante se inscribe dos veces)
+- `COUNT(DISTINCT i.id_estudiante)` cuenta estudiantes únicos
+- `LIMIT 10` muestra solo las 10 primeras
+
+### Ejercicio 5: Estudiantes Sin Inscripciones
+
+**Objetivo**: Encontrar estudiantes que no están inscritos en ninguna materia.
+
+```sql
+SELECT 
+    e.id,
+    e.nombre,
+    e.apellido,
+    e.email,
+    e.edad
+FROM estudiantes e
+LEFT JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE i.id IS NULL
+ORDER BY e.apellido, e.nombre;
+```
+
+**Resultado esperado**: 
+- Lista de estudiantes sin inscripciones
+- Útil para identificar estudiantes que necesitan inscribirse
+
+**Explicación**:
+- `LEFT JOIN` trae todos los estudiantes
+- `WHERE i.id IS NULL` filtra solo los que no tienen inscripciones
+
+### Ejercicio 6: Materias Sin Estudiantes
+
+**Objetivo**: Encontrar materias que no tienen ningún estudiante inscrito.
+
+```sql
+SELECT 
+    m.id,
+    m.nombre,
+    m.codigo,
+    m.creditos
+FROM materias m
+LEFT JOIN inscripciones i ON m.id = i.id_materia
+WHERE i.id IS NULL
+ORDER BY m.nombre;
+```
+
+**Resultado esperado**: 
+- Lista de materias sin estudiantes
+- Útil para identificar materias que no se están ofreciendo
+
+**Explicación**:
+- `LEFT JOIN` trae todas las materias
+- `WHERE i.id IS NULL` filtra solo las que no tienen inscripciones
+
+### Ejercicio 7: Promedio de Notas por Estudiante
+
+**Objetivo**: Calcular el promedio de notas de cada estudiante (solo los que tienen notas).
+
+```sql
+SELECT 
+    e.nombre,
+    e.apellido,
+    COUNT(i.nota) as materias_con_nota,
+    AVG(i.nota) as promedio_notas,
+    MAX(i.nota) as mejor_nota,
+    MIN(i.nota) as peor_nota
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE i.nota IS NOT NULL
+GROUP BY e.id, e.nombre, e.apellido
+HAVING COUNT(i.nota) > 0
+ORDER BY promedio_notas DESC;
+```
+
+**Resultado esperado**: 
+- Lista de estudiantes con sus promedios
+- Ordenados de mayor a menor promedio
+
+**Explicación**:
+- `INNER JOIN` solo incluye estudiantes con inscripciones
+- `WHERE i.nota IS NOT NULL` filtra solo inscripciones con notas
+- Funciones de agregación calculan estadísticas por estudiante
+
+### Ejercicio 8: Verificar ON DELETE CASCADE
+
+**Objetivo**: Probar que `ON DELETE CASCADE` funciona correctamente.
+
+```sql
+-- Paso 1: Ver inscripciones de un estudiante antes de eliminarlo
+SELECT 
+    e.nombre,
+    e.apellido,
+    COUNT(i.id) as total_inscripciones
+FROM estudiantes e
+LEFT JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE e.id = 1
+GROUP BY e.id, e.nombre, e.apellido;
+
+-- Paso 2: Ver las inscripciones específicas
+SELECT * FROM inscripciones WHERE id_estudiante = 1;
+
+-- Paso 3: Eliminar el estudiante (si tiene ON DELETE CASCADE)
+-- ⚠️ CUIDADO: Esto eliminará el estudiante y sus inscripciones
+-- DELETE FROM estudiantes WHERE id = 1;
+
+-- Paso 4: Verificar que las inscripciones se eliminaron automáticamente
+-- SELECT * FROM inscripciones WHERE id_estudiante = 1;
+-- Debe estar vacío si CASCADE funciona
+```
+
+**Resultado esperado**: 
+- Antes: El estudiante tiene inscripciones
+- Después: El estudiante y sus inscripciones se eliminan
+
+**Explicación**:
+- `ON DELETE CASCADE` elimina automáticamente los registros hijos cuando se elimina el padre
+- Útil para mantener la integridad referencial sin dejar datos huérfanos
+
+### Ejercicio 9: Comparar INNER, LEFT y RIGHT JOIN
+
+**Objetivo**: Ver las diferencias entre los tres tipos de JOIN con la misma consulta.
+
+```sql
+-- 1. INNER JOIN - Solo coincidencias
+SELECT 
+    'INNER JOIN' as tipo_join,
+    COUNT(*) as total_filas
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+INNER JOIN materias m ON i.id_materia = m.id;
+
+-- 2. LEFT JOIN - Todos los estudiantes
+SELECT 
+    'LEFT JOIN' as tipo_join,
+    COUNT(*) as total_filas,
+    COUNT(CASE WHEN m.id IS NULL THEN 1 END) as estudiantes_sin_materias
+FROM estudiantes e
+LEFT JOIN inscripciones i ON e.id = i.id_estudiante
+LEFT JOIN materias m ON i.id_materia = m.id;
+
+-- 3. RIGHT JOIN - Todas las materias
+SELECT 
+    'RIGHT JOIN' as tipo_join,
+    COUNT(*) as total_filas,
+    COUNT(CASE WHEN e.id IS NULL THEN 1 END) as materias_sin_estudiantes
+FROM estudiantes e
+RIGHT JOIN inscripciones i ON e.id = i.id_estudiante
+RIGHT JOIN materias m ON i.id_materia = m.id;
+```
+
+**Resultado esperado**: 
+- INNER JOIN: Menos filas (solo coincidencias)
+- LEFT JOIN: Más filas (incluye estudiantes sin materias)
+- RIGHT JOIN: Más filas (incluye materias sin estudiantes)
+
+**Explicación**:
+- Compara los tres tipos de JOIN con la misma estructura
+- Muestra cómo cada uno incluye o excluye datos diferentes
+
+### Ejercicio 10: Vista Completa de Inscripciones con Información Completa
+
+**Objetivo**: Crear una consulta que muestre toda la información relevante de las inscripciones.
+
+```sql
+SELECT 
+    e.id as id_estudiante,
+    e.nombre as nombre_estudiante,
+    e.apellido as apellido_estudiante,
+    e.email,
+    m.id as id_materia,
+    m.nombre as nombre_materia,
+    m.codigo as codigo_materia,
+    m.creditos,
+    i.fecha_inscripcion,
+    i.nota,
+    CASE 
+        WHEN i.nota IS NULL THEN 'Sin calificar'
+        WHEN i.nota >= 7 THEN 'Aprobado'
+        ELSE 'Desaprobado'
+    END as estado
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+INNER JOIN materias m ON i.id_materia = m.id
+ORDER BY e.apellido, e.nombre, m.nombre;
+```
+
+**Resultado esperado**: 
+- Lista completa de inscripciones con toda la información
+- Incluye estado calculado basado en la nota
+
+**Explicación**:
+- `INNER JOIN` solo muestra inscripciones válidas
+- `CASE` calcula el estado basado en la nota
+- Ordena por estudiante y luego por materia
 
 ---
 
