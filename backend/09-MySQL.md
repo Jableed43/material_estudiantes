@@ -1118,11 +1118,47 @@ Vaciar una tabla (elimina todos los registros pero mantiene la estructura).
 TRUNCATE TABLE autores;
 ```
 
-**Diferencia con DELETE:**
-- `TRUNCATE` es más rápido
-- `TRUNCATE` reinicia AUTO_INCREMENT
-- `TRUNCATE` no puede tener WHERE
-- `TRUNCATE` no puede revertirse con ROLLBACK
+**Características:**
+- ✅ Elimina **todos** los registros de la tabla
+- ✅ Mantiene la estructura (columnas, índices, restricciones, etc.)
+- ✅ Reinicia `AUTO_INCREMENT` a 1
+- ✅ Es **más rápido** que `DELETE`
+- ❌ **No permite** `WHERE` (elimina todo)
+- ❌ **No se puede revertir** con `ROLLBACK`
+
+**Comparación con DELETE:**
+
+| Característica | DELETE | TRUNCATE TABLE |
+|----------------|--------|----------------|
+| **Velocidad** | Más lento | Más rápido |
+| **Permite WHERE** | ✅ Sí | ❌ No |
+| **Reinicia AUTO_INCREMENT** | ❌ No | ✅ Sí |
+| **Se puede revertir (ROLLBACK)** | ✅ Sí | ❌ No |
+| **Elimina registros** | ✅ Sí | ✅ Sí |
+| **Mantiene estructura** | ✅ Sí | ✅ Sí |
+
+**Ejemplos:**
+
+```sql
+-- DELETE: Permite WHERE, pero más lento
+DELETE FROM estudiantes WHERE edad < 18;  -- ✅ Elimina solo menores de 18
+DELETE FROM estudiantes;  -- Elimina todo, pero más lento
+
+-- TRUNCATE: Más rápido, pero elimina TODO
+TRUNCATE TABLE estudiantes;  -- ✅ Más rápido, pero elimina todo
+```
+
+**Cuándo usar TRUNCATE TABLE:**
+- ✅ Necesitas vaciar completamente una tabla
+- ✅ Quieres reiniciar `AUTO_INCREMENT` a 1
+- ✅ Necesitas mejor rendimiento al eliminar todos los registros
+- ✅ No necesitas filtrar qué eliminar
+- ✅ No necesitas poder revertir la operación
+
+**Cuándo usar DELETE:**
+- ✅ Necesitas eliminar registros específicos (con WHERE)
+- ✅ Necesitas poder revertir la operación (ROLLBACK)
+- ✅ No quieres reiniciar AUTO_INCREMENT
 
 ### Índices
 
@@ -1969,12 +2005,24 @@ GROUP BY e.id, e.nombre, e.apellido;
 
 Trunca un número a un número específico de decimales **sin redondear**.
 
+**Sintaxis:**
+```sql
+TRUNCATE(numero, decimales)
+```
+
+**Parámetros:**
+- `numero`: El número a truncar
+- `decimales`: Cantidad de decimales a mantener
+
 ```sql
 -- Truncar a 2 decimales
 SELECT TRUNCATE(123.456, 2);  -- Resultado: 123.45
 
--- Truncar a 0 decimales
+-- Truncar a 0 decimales (eliminar decimales)
 SELECT TRUNCATE(123.456, 0);  -- Resultado: 123
+
+-- Truncar sin redondear (importante)
+SELECT TRUNCATE(123.999, 2);  -- Resultado: 123.99 (NO se convierte en 124.00)
 
 -- Ejemplo práctico: Promedio truncado por materia
 SELECT 
@@ -1987,8 +2035,85 @@ GROUP BY m.id, m.nombre;
 ```
 
 **Diferencia ROUND vs TRUNCATE:**
-- `ROUND(123.456, 2)` → `123.46` (redondea hacia arriba)
-- `TRUNCATE(123.456, 2)` → `123.45` (solo corta)
+
+| Valor | ROUND(, 1) | TRUNCATE(, 1) |
+|-------|------------|---------------|
+| 123.45 | 123.5 | 123.4 |
+| 123.46 | 123.5 | 123.4 |
+| 123.99 | 124.0 | 123.9 |
+| 123.14 | 123.1 | 123.1 |
+
+**Ejemplos comparativos:**
+```sql
+-- ROUND: Redondea hacia arriba o abajo
+ROUND(123.456, 2);  -- Resultado: 123.46 (redondea hacia arriba)
+ROUND(123.454, 2);  -- Resultado: 123.45 (redondea hacia abajo)
+
+-- TRUNCATE: Solo corta, nunca redondea
+TRUNCATE(123.456, 2);  -- Resultado: 123.45 (solo corta)
+TRUNCATE(123.999, 2);  -- Resultado: 123.99 (NO redondea a 124.00)
+```
+
+**Utilidades de TRUNCATE():**
+
+1. **Control preciso de decimales sin redondear:**
+```sql
+-- Cuando necesitas cortar decimales sin redondear
+SELECT TRUNCATE(99.999, 2);  -- 99.99 (no se convierte en 100.00)
+```
+
+2. **Formatear promedios o estadísticas:**
+```sql
+-- Promedio truncado a 1 decimal
+SELECT 
+    estudiante_id,
+    TRUNCATE(AVG(nota), 1) as promedio
+FROM inscripciones
+GROUP BY estudiante_id;
+```
+
+3. **Eliminar decimales completamente:**
+```sql
+-- Convertir a entero truncando (sin redondear)
+SELECT TRUNCATE(123.99, 0);  -- Resultado: 123 (no 124)
+```
+
+4. **Comparar con ROUND para ver diferencias:**
+```sql
+-- Ver diferencia entre redondeo y truncamiento
+SELECT 
+    nota,
+    ROUND(nota, 1) as redondeado,
+    TRUNCATE(nota, 1) as truncado
+FROM inscripciones;
+```
+
+**¿Cuándo usar TRUNCATE vs ROUND?**
+
+- **Usa ROUND cuando:**
+  - Necesitas redondear hacia arriba o abajo
+  - Trabajas con promedios que deben reflejar el valor más cercano
+  - Necesitas precisión matemática estándar
+
+- **Usa TRUNCATE cuando:**
+  - Necesitas cortar decimales sin redondear
+  - Quieres mantener siempre hacia abajo
+  - Necesitas control exacto sobre los decimales mostrados
+  - Trabajas con cálculos donde el redondeo no es deseable
+
+**Ejemplo práctico completo:**
+```sql
+-- Sistema de calificaciones donde quieres truncar, no redondear
+SELECT 
+    e.nombre,
+    e.apellido,
+    TRUNCATE(AVG(i.nota), 1) as promedio_truncado,  -- 7.99 → 7.9
+    ROUND(AVG(i.nota), 1) as promedio_redondeado     -- 7.99 → 8.0
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE i.nota IS NOT NULL
+GROUP BY e.id, e.nombre, e.apellido;
+```
 
 #### FORMAT - Formatear con Separadores
 
