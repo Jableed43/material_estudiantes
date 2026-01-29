@@ -632,69 +632,110 @@ Describe la cantidad de instancias de una entidad que pueden estar asociadas con
 #### 1. Relación Uno a Uno (1:1)
 Una instancia de la entidad A está relacionada con una y solo una instancia de la entidad B.
 
-**Ejemplo:** `persona` y `pasaporte` - cada persona tiene un solo pasaporte.
+**Ejemplo:** `estudiante` y `expediente_academico` - cada estudiante tiene un solo expediente académico, y cada expediente pertenece a un solo estudiante.
 
 ```sql
-CREATE TABLE personas (
+CREATE TABLE estudiantes (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    nombre VARCHAR(100)
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL
 );
 
-CREATE TABLE pasaportes (
+CREATE TABLE expediente_academico (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    numero VARCHAR(50) UNIQUE,
-    persona_id INT UNIQUE,
-    FOREIGN KEY (persona_id) REFERENCES personas(id)
+    numero_expediente VARCHAR(50) UNIQUE NOT NULL,
+    estudiante_id INT UNIQUE NOT NULL,
+    fecha_ingreso DATE NOT NULL,
+    estado VARCHAR(20) DEFAULT 'activo',
+    FOREIGN KEY (estudiante_id) REFERENCES estudiantes(id)
+        ON DELETE CASCADE
 );
 ```
+
+**Explicación:**
+- Cada estudiante tiene **exactamente un** expediente académico
+- Cada expediente académico pertenece a **exactamente un** estudiante
+- La columna `estudiante_id` tiene `UNIQUE` para garantizar la relación 1:1
+- Si eliminas un estudiante, su expediente se elimina automáticamente (CASCADE)
 
 #### 2. Relación Uno a Muchos (1:N)
 Una instancia de A puede estar relacionada con múltiples instancias de B, pero B solo puede estar relacionada con una A.
 
-**Ejemplo:** `autor` y `libros` - un autor puede tener muchos libros, pero cada libro tiene un solo autor.
+**Ejemplo:** `docente` y `materia` - un docente puede dictar muchas materias, pero cada materia tiene un solo docente responsable.
 
 ```sql
-CREATE TABLE autores (
-    id_autor INT PRIMARY KEY AUTO_INCREMENT,
-    nombre VARCHAR(100)
+CREATE TABLE docentes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    especialidad VARCHAR(100)
 );
 
-CREATE TABLE libros (
-    id_libro INT PRIMARY KEY AUTO_INCREMENT,
-    titulo VARCHAR(255),
-    id_autor INT,
-    FOREIGN KEY (id_autor) REFERENCES autores(id_autor)
+CREATE TABLE materias (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    codigo VARCHAR(20) UNIQUE,
+    creditos INT DEFAULT 0,
+    docente_id INT NOT NULL,
+    FOREIGN KEY (docente_id) REFERENCES docentes(id)
+        ON DELETE RESTRICT
 );
 ```
+
+**Explicación:**
+- Un docente puede dictar **muchas** materias (1:N)
+- Cada materia tiene **un solo** docente responsable
+- La clave foránea `docente_id` en `materias` referencia a `docentes`
+- `ON DELETE RESTRICT` evita eliminar un docente si tiene materias asignadas
+- Ejemplo: El docente "Prof. García" puede dictar "Programación I", "Base de Datos" y "Algoritmos"
 
 #### 3. Relación Muchos a Muchos (N:M)
 Múltiples instancias de A pueden estar relacionadas con múltiples instancias de B.
 
-**Ejemplo:** `libros` y `lectores` - un libro puede ser leído por muchos lectores, y un lector puede leer muchos libros.
+**Ejemplo:** `estudiantes` y `materias` - un estudiante puede estar inscrito en muchas materias, y una materia puede tener muchos estudiantes inscritos.
 
 **Solución:** Se utiliza una **tabla intermedia o pivote** que contiene las claves foráneas de ambas tablas.
 
 ```sql
-CREATE TABLE libros (
-    id_libro INT PRIMARY KEY AUTO_INCREMENT,
-    titulo VARCHAR(255)
+CREATE TABLE estudiantes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    edad INT
 );
 
-CREATE TABLE lectores (
-    id_lector INT PRIMARY KEY AUTO_INCREMENT,
-    nombre VARCHAR(100)
+CREATE TABLE materias (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    codigo VARCHAR(20) UNIQUE,
+    creditos INT DEFAULT 0
 );
 
--- Tabla intermedia
-CREATE TABLE prestamos (
-    id_prestamo INT PRIMARY KEY AUTO_INCREMENT,
-    id_libro INT,
-    id_lector INT,
-    fecha_prestamo DATE,
-    FOREIGN KEY (id_libro) REFERENCES libros(id_libro),
-    FOREIGN KEY (id_lector) REFERENCES lectores(id_lector)
+-- Tabla intermedia (pivote) para la relación N:M
+CREATE TABLE inscripciones (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_estudiante INT NOT NULL,
+    id_materia INT NOT NULL,
+    fecha_inscripcion DATE NOT NULL,
+    nota DECIMAL(4,2) DEFAULT NULL,
+    FOREIGN KEY (id_estudiante) REFERENCES estudiantes(id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (id_materia) REFERENCES materias(id)
+        ON DELETE RESTRICT,
+    UNIQUE KEY unique_inscripcion (id_estudiante, id_materia)
 );
 ```
+
+**Explicación:**
+- Un estudiante puede estar inscrito en **muchas** materias
+- Una materia puede tener **muchos** estudiantes inscritos
+- La tabla `inscripciones` es la tabla intermedia que conecta ambas tablas
+- `UNIQUE KEY` evita que un estudiante se inscriba dos veces en la misma materia
+- `ON DELETE CASCADE` en `id_estudiante`: si eliminas un estudiante, se eliminan sus inscripciones
+- `ON DELETE RESTRICT` en `id_materia`: no puedes eliminar una materia si tiene estudiantes inscritos
 
 ##### 📊 Visualización de Relaciones N:M con Tabla Intermedia
 
@@ -1328,15 +1369,81 @@ SELECT * FROM autores ORDER BY nacionalidad ASC, nombre ASC;
 ```
 
 #### LIMIT / OFFSET - Paginación
+
+**LIMIT**: Limita la cantidad de registros que se devuelven.
+
+**OFFSET**: Indica cuántos registros saltar antes de empezar a devolver resultados.
+
 ```sql
--- Limitar resultados
-SELECT * FROM autores LIMIT 10;
+-- Limitar resultados a los primeros 10
+SELECT * FROM estudiantes LIMIT 10;
 
--- Con offset (paginación)
-SELECT * FROM autores LIMIT 10 OFFSET 20;  -- Registros 21-30
+-- Con offset (paginación) - saltar 20 registros y mostrar los siguientes 10
+SELECT * FROM estudiantes LIMIT 10 OFFSET 20;  -- Registros 21-30
 
--- Sintaxis alternativa
-SELECT * FROM autores LIMIT 20, 10;  -- OFFSET 20, LIMIT 10
+-- Sintaxis alternativa (OFFSET primero, luego LIMIT)
+SELECT * FROM estudiantes LIMIT 20, 10;  -- OFFSET 20, LIMIT 10
+```
+
+**Ejemplos prácticos:**
+
+```sql
+-- Página 1: primeros 10 estudiantes
+SELECT nombre, apellido, email
+FROM estudiantes
+ORDER BY apellido, nombre
+LIMIT 10 OFFSET 0;
+-- Resultado: registros 1-10
+
+-- Página 2: siguientes 10 estudiantes
+SELECT nombre, apellido, email
+FROM estudiantes
+ORDER BY apellido, nombre
+LIMIT 10 OFFSET 10;
+-- Resultado: registros 11-20
+
+-- Página 3: siguientes 10 estudiantes
+SELECT nombre, apellido, email
+FROM estudiantes
+ORDER BY apellido, nombre
+LIMIT 10 OFFSET 20;
+-- Resultado: registros 21-30
+```
+
+**Fórmula para paginación:**
+```sql
+-- OFFSET = (página - 1) * registros_por_página
+-- Página 1: OFFSET = (1-1) * 10 = 0
+-- Página 2: OFFSET = (2-1) * 10 = 10
+-- Página 3: OFFSET = (3-1) * 10 = 20
+```
+
+**Visualización:**
+```
+Registros: [1] [2] [3] [4] [5] [6] [7] [8] [9] [10] [11] [12] [13] [14] [15] ...
+
+LIMIT 5 OFFSET 0  → [1] [2] [3] [4] [5]
+LIMIT 5 OFFSET 5  → [6] [7] [8] [9] [10]
+LIMIT 5 OFFSET 10 → [11] [12] [13] [14] [15]
+```
+
+**Reglas importantes:**
+- ✅ OFFSET cuenta desde 0: `OFFSET 0` = no saltar nada
+- ✅ Siempre usar `ORDER BY` para resultados consistentes
+- ✅ Sin `ORDER BY`, los resultados pueden variar entre consultas
+
+**Ejemplo con materias:**
+```sql
+-- Top 5 materias más populares
+SELECT 
+    m.nombre,
+    m.codigo,
+    COUNT(i.idestudiante) AS cantidad_estudiantes
+FROM materias m
+LEFT JOIN inscripciones i ON m.id = i.id_materia
+GROUP BY m.id, m.nombre, m.codigo
+ORDER BY cantidad_estudiantes DESC
+LIMIT 5;
 ```
 
 #### GROUP BY - Agrupar
