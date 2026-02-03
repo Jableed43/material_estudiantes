@@ -383,32 +383,106 @@ Servicio de MongoDB en la nube (DBaaS - Database as a Service).
 ## 4. Instalación y Herramientas
 
 ### MongoDB Community Server
-El motor de la base de datos (el "servidor").
+El motor de la base de datos (el "servidor"). Es necesario instalarlo para que MongoDB funcione.
 
-**Instalación:**
-- **Windows**: Descargar desde mongodb.com
-- **Mac**: `brew install mongodb-community`
-- **Linux**: `apt-get install mongodb` o `yum install mongodb`
+**Descarga e Instalación:**
+- **Enlace de descarga**: [https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community)
+- **Windows**: Descargar el instalador `.msi` desde el enlace, ejecutar y seguir el asistente de instalación
+- **Mac**: 
+  ```bash
+  brew install mongodb-community
+  ```
+- **Linux**: 
+  ```bash
+  # Ubuntu/Debian
+  apt-get install mongodb
+  
+  # CentOS/RHEL
+  yum install mongodb
+  ```
+
+**Iniciar el servidor:**
+```bash
+# Windows (después de la instalación, se inicia automáticamente como servicio)
+# O manualmente desde la línea de comandos:
+mongod
+
+# Mac/Linux
+mongod
+```
 
 ### MongoDB Compass
-Interfaz gráfica (GUI) oficial. Permite:
-- Visualizar datos
-- Crear índices
+Interfaz gráfica (GUI) oficial de MongoDB. Permite:
+- Visualizar datos de forma gráfica
+- Crear y gestionar índices
 - Ejecutar agregaciones visualmente
-- Administrar bases de datos
+- Administrar bases de datos y colecciones
+- Ejecutar consultas y ver resultados
+- **Incluye un shell integrado** para ejecutar comandos directamente
 
-### MongoShell (`mongosh`)
-La consola de comandos moderna para interactuar con la base de datos mediante código JavaScript.
+**Descarga e Instalación:**
+- **Enlace de descarga**: [https://www.mongodb.com/try/download/compass](https://www.mongodb.com/try/download/compass)
+- **Windows**: Descargar el instalador `.msi`, ejecutar y seguir el asistente
+- **Mac**: Descargar el archivo `.dmg` e instalar
+- **Linux**: Descargar el paquete `.deb` o `.rpm` según tu distribución
+
+**Uso:**
+- Abre MongoDB Compass
+- Conecta a `mongodb://localhost:27017` (o tu servidor remoto)
+- Explora tus bases de datos y colecciones visualmente
+
+**⚠️ Nota importante sobre MongoDB Shell:**
+- **Compass incluye un shell integrado** en su interfaz, por lo que puedes ejecutar comandos de MongoDB directamente desde Compass sin necesidad de instalar `mongosh` por separado.
+- Sin embargo, si prefieres usar la **terminal/consola de comandos** para trabajar con MongoDB, necesitarás instalar `mongosh` por separado (ver sección siguiente).
+
+### MongoDB Shell (`mongosh`)
+La consola de comandos moderna para interactuar con la base de datos mediante código JavaScript desde la terminal.
+
+**¿Necesito instalar mongosh si ya tengo Compass?**
+- **NO es estrictamente necesario** si solo usas Compass, ya que Compass incluye un shell integrado.
+- **SÍ es recomendable** si prefieres trabajar desde la terminal, necesitas automatizar tareas con scripts, o quieres usar MongoDB en entornos sin interfaz gráfica.
+
+**Descarga e Instalación:**
+- **Enlace de descarga**: [https://www.mongodb.com/try/download/shell](https://www.mongodb.com/try/download/shell)
+- **Windows**: Descargar el instalador `.msi` y seguir el asistente
+- **Mac**: Descargar el archivo `.tgz` o usar Homebrew:
+  ```bash
+  brew install mongosh
+  ```
+- **Linux**: Descargar el paquete `.deb` o `.rpm` según tu distribución
 
 **Iniciar:**
 ```bash
 mongosh
 ```
 
-**Conectar a servidor remoto:**
+**Conectar a servidor local:**
 ```bash
 mongosh "mongodb://localhost:27017"
 ```
+
+**Conectar a servidor remoto:**
+```bash
+mongosh "mongodb://usuario:password@servidor:27017/nombre_db"
+```
+
+**Conectar a MongoDB Atlas (nube):**
+```bash
+mongosh "mongodb+srv://usuario:password@cluster.mongodb.net/nombre_db"
+```
+
+### Resumen de Herramientas
+
+| Herramienta | ¿Qué es? | ¿Cuándo usarla? | ¿Es obligatoria? |
+|-------------|----------|-----------------|------------------|
+| **MongoDB Community Server** | El servidor de base de datos | Siempre (necesario para que MongoDB funcione) | ✅ Sí, obligatorio |
+| **MongoDB Compass** | Interfaz gráfica (GUI) | Para visualizar datos, administrar bases de datos, trabajar con interfaz gráfica | ⚠️ Opcional pero muy recomendado |
+| **MongoDB Shell (mongosh)** | Consola de comandos | Para trabajar desde terminal, automatizar tareas, scripts | ⚠️ Opcional (Compass incluye shell integrado) |
+
+**Recomendación para principiantes:**
+1. Instala **MongoDB Community Server** (obligatorio)
+2. Instala **MongoDB Compass** (muy recomendado para empezar)
+3. Instala **mongosh** solo si prefieres trabajar desde la terminal o necesitas automatizar tareas
 
 ---
 
