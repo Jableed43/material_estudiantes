@@ -17,9 +17,16 @@
    - [Encontrar Datos Sin Relaciones](#encontrar-datos-sin-relaciones)
    - [Errores Comunes con JOINs y Relaciones](#errores-comunes-con-joins-y-relaciones)
 10. [Funciones de Agregación](#10-funciones-de-agregación)
-11. [Triggers, Stored Procedures y Functions](#11-triggers-stored-procedures-y-functions)
-12. [Conexión desde Node.js](#12-conexión-desde-nodejs)
-13. [Ejercicios Prácticos con Base de Datos Escuela](#-ejercicios-prácticos-con-base-de-datos-escuela)
+11. [Orden de Ejecución de Consultas SQL](#11-orden-de-ejecución-de-consultas-sql)
+12. [HAVING: Filtrado de Grupos](#12-having-filtrado-de-grupos)
+13. [Subconsultas (Subqueries)](#13-subconsultas-subqueries)
+14. [CASE WHEN: Lógica Condicional](#14-case-when-lógica-condicional)
+15. [UNION: Combinación de Resultados](#15-union-combinación-de-resultados)
+16. [Funciones de Fecha y Hora](#16-funciones-de-fecha-y-hora)
+17. [Funciones de Texto](#17-funciones-de-texto)
+18. [Triggers, Stored Procedures y Functions](#18-triggers-stored-procedures-y-functions)
+19. [Conexión desde Node.js](#19-conexión-desde-nodejs)
+20. [Ejercicios Prácticos con Base de Datos Escuela](#-ejercicios-prácticos-con-base-de-datos-escuela)
 
 ---
 
@@ -1455,13 +1462,8 @@ GROUP BY nacionalidad;
 ```
 
 #### HAVING - Filtrar Grupos
-```sql
--- Filtrar grupos después de GROUP BY
-SELECT nacionalidad, COUNT(*) as total
-FROM autores
-GROUP BY nacionalidad
-HAVING total > 2;  -- Solo nacionalidades con más de 2 autores
-```
+
+**HAVING** es una cláusula que filtra **grupos de filas** después de que se han agrupado con `GROUP BY`.
 
 **Diferencia WHERE vs HAVING:**
 - `WHERE` filtra **filas individuales** antes de agrupar
@@ -1480,6 +1482,49 @@ FROM autores
 GROUP BY nacionalidad
 HAVING total > 2;  -- Solo grupos con más de 2 autores
 ```
+
+**¿Cuándo usar WHERE y cuándo HAVING?**
+
+**Usa WHERE cuando:**
+- Quieres filtrar filas individuales antes de agrupar
+- La condición no involucra funciones de agregación
+- Quieres mejorar el rendimiento (menos datos para agrupar)
+
+**Usa HAVING cuando:**
+- Quieres filtrar grupos después de agrupar
+- La condición involucra funciones de agregación (COUNT, AVG, SUM, etc.)
+- Quieres filtrar basándote en resultados calculados
+
+**Combinando WHERE y HAVING:**
+
+Puedes usar **ambos** en la misma consulta para filtrar en diferentes etapas.
+
+```sql
+-- Ejemplo: Materias con más de 5 estudiantes y promedio mayor a 7
+SELECT 
+    m.nombre as materia,
+    COUNT(i.id) as total_estudiantes,
+    AVG(i.nota) as promedio_notas
+FROM materias m
+INNER JOIN inscripciones i ON m.id = i.id_materia
+WHERE i.nota IS NOT NULL  -- Filtra filas antes de agrupar
+GROUP BY m.id, m.nombre
+HAVING COUNT(i.id) > 5 AND AVG(i.nota) > 7;  -- Filtra grupos después de agrupar
+```
+
+**Reglas de uso del HAVING:**
+
+**✅ Puedes usar:**
+- Funciones de agregación: `COUNT()`, `SUM()`, `AVG()`, `MIN()`, `MAX()`
+- Alias de columnas calculadas: Definidas en SELECT
+- Operadores de comparación: `>`, `<`, `>=`, `<=`, `=`, `!=`, `<>`
+- Operadores lógicos: `AND`, `OR`, `NOT`
+- Operadores especiales: `IN`, `NOT IN`, `LIKE`, `BETWEEN`
+- Expresiones matemáticas con funciones de agregación
+
+**❌ No puedes usar:**
+- Columnas que no están en GROUP BY (a menos que sean agregadas)
+- Subconsultas complejas correlacionadas (mejor usar WHERE o JOIN)
 
 ### UPDATE
 
@@ -2290,7 +2335,1194 @@ ORDER BY precio_promedio DESC;
 
 ---
 
-## 11. Triggers, Stored Procedures y Functions
+## 11. Orden de Ejecución de Consultas SQL
+
+### ¿Por qué es Importante Entender el Orden?
+
+**Problema común**: Muchos estudiantes escriben consultas pensando que SQL las ejecuta de arriba hacia abajo, como si fuera código de programación. Esto causa confusión y errores.
+
+**Realidad**: SQL tiene su propio orden de ejecución interno, diferente al orden en que escribes las cláusulas.
+
+**Entender el orden real te ayuda a**:
+- ✅ **Escribir consultas más eficientes**: Sabes qué se ejecuta primero, puedes optimizar el orden de las operaciones
+- ✅ **Evitar errores comunes**: No intentas usar funciones de agregación en WHERE (porque WHERE se ejecuta antes de GROUP BY)
+- ✅ **Comprender por qué algunas consultas funcionan y otras no**: Entiendes la lógica interna de SQL
+- ✅ **Optimizar el rendimiento**: Filtras primero con WHERE para reducir datos antes de agrupar
+- ✅ **Depurar problemas más rápido**: Sabes dónde buscar el error según el orden de ejecución
+
+### Orden de Ejecución Real
+
+**Estructura de una consulta SQL** (orden en que la escribes):
+```sql
+SELECT columnas, funciones_agregacion
+FROM tabla
+JOIN otra_tabla ON condicion
+WHERE condiciones_filtro_filas
+GROUP BY columnas_agrupacion
+HAVING condiciones_filtro_grupos
+ORDER BY columnas_ordenamiento
+LIMIT cantidad;
+```
+
+**Orden de ejecución real** (orden en que MySQL la procesa):
+
+1. **FROM**: Identifica las tablas involucradas
+2. **JOIN**: Combina las tablas según las condiciones
+3. **WHERE**: Filtra **filas individuales** (antes de agrupar)
+   - ⚠️ **Importante**: No puede usar funciones de agregación aquí
+4. **GROUP BY**: Agrupa las filas según las columnas especificadas
+5. **HAVING**: Filtra **grupos** (después de agrupar)
+   - ✅ Puede usar funciones de agregación (COUNT, AVG, etc.)
+6. **SELECT**: Selecciona y calcula las columnas finales
+   - Calcula funciones de agregación para cada grupo
+   - Crea los alias de columnas
+7. **ORDER BY**: Ordena los resultados
+   - Puede usar alias definidos en SELECT
+8. **LIMIT**: Limita la cantidad de resultados
+
+**Ejemplo visual**:
+```sql
+-- Queremos encontrar los 10 estudiantes mayores de 20 años con promedio > 7
+SELECT 
+    e.nombre,
+    e.apellido,
+    COUNT(i.id) as cantidad_materias,
+    AVG(i.nota) as promedio
+FROM estudiantes e                    -- 1. FROM: Identifica tablas
+INNER JOIN inscripciones i            -- 2. JOIN: Combina tablas
+    ON e.id = i.id_estudiante
+WHERE e.edad > 20                     -- 3. WHERE: Filtra filas (edad > 20)
+GROUP BY e.id, e.nombre, e.apellido  -- 4. GROUP BY: Agrupa por estudiante
+HAVING AVG(i.nota) > 7                -- 5. HAVING: Filtra grupos (promedio > 7)
+ORDER BY promedio DESC                -- 7. ORDER BY: Ordena por promedio
+LIMIT 10;                             -- 8. LIMIT: Solo primeros 10
+```
+
+**Por qué importa**: Si pusieras HAVING antes de GROUP BY, MySQL no sabría qué grupos filtrar porque aún no existen.
+
+---
+
+## 12. HAVING: Filtrado de Grupos
+
+### Concepto Fundamental
+
+**HAVING** es una cláusula que filtra **grupos de filas** después de que se han agrupado con `GROUP BY`.
+
+**¿Por qué existe HAVING?**
+Cuando agrupas datos con GROUP BY, creas grupos. A veces necesitas filtrar estos grupos según características del grupo completo (como su promedio, cantidad de elementos, etc.), no de filas individuales. WHERE no puede hacer esto porque opera antes de agrupar.
+
+**Analogía**: Imagina que tienes cajas (grupos) con objetos (filas):
+- **WHERE**: Filtra objetos ANTES de meterlos en las cajas
+- **GROUP BY**: Organiza los objetos en cajas según algún criterio
+- **HAVING**: Filtra cajas DESPUÉS de agrupar los objetos
+
+### Diferencia Clave: WHERE vs HAVING
+
+| Aspecto | WHERE | HAVING |
+|---------|-------|--------|
+| **Cuándo se ejecuta** | Antes de GROUP BY | Después de GROUP BY |
+| **Qué filtra** | Filas individuales | Grupos de filas |
+| **Puede usar funciones de agregación** | ❌ NO | ✅ SÍ |
+| **Puede usar alias** | ❌ NO | ✅ SÍ |
+
+### Ejemplo Comparativo
+
+**Escenario**: Queremos encontrar estudiantes con promedio > 8 que tengan al menos 3 materias.
+
+**❌ Error común**: Intentar usar `AVG(nota)` en WHERE
+```sql
+-- Esto dará ERROR
+SELECT nombre, AVG(nota) as promedio
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE AVG(nota) > 8  -- ❌ ERROR: WHERE no puede usar funciones de agregación
+GROUP BY e.id, e.nombre;
+```
+
+**✅ Solución correcta**: 
+```sql
+SELECT 
+    e.nombre,
+    e.apellido,
+    COUNT(i.id) as cantidad_materias,
+    AVG(i.nota) as promedio
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE i.nota IS NOT NULL  -- WHERE: Filtra filas antes de agrupar
+GROUP BY e.id, e.nombre, e.apellido
+HAVING AVG(i.nota) > 8 AND COUNT(i.id) >= 3;  -- HAVING: Filtra grupos después
+```
+
+### Combinando WHERE y HAVING
+
+Puedes usar **ambos** en la misma consulta para filtrar en diferentes etapas.
+
+**Ejemplo**: Encontrar materias con más de 5 estudiantes y promedio mayor a 7.
+```sql
+SELECT 
+    m.nombre as materia,
+    COUNT(i.id) as total_estudiantes,
+    AVG(i.nota) as promedio_notas
+FROM materias m
+INNER JOIN inscripciones i ON m.id = i.id_materia
+WHERE i.nota IS NOT NULL  -- Filtra filas antes de agrupar (más eficiente)
+GROUP BY m.id, m.nombre
+HAVING COUNT(i.id) > 5 AND AVG(i.nota) > 7;  -- Filtra grupos después
+```
+
+**¿Por qué usar ambos?**
+- **WHERE**: Reduce la cantidad de datos antes de agrupar (más eficiente)
+- **HAVING**: Filtra los grupos resultantes según criterios que solo existen después de agrupar
+
+### Reglas Importantes de HAVING
+
+**✅ Puedes usar en HAVING:**
+- Funciones de agregación: `COUNT()`, `SUM()`, `AVG()`, `MIN()`, `MAX()`
+- Alias de columnas calculadas: Definidas en SELECT
+- Operadores de comparación: `>`, `<`, `>=`, `<=`, `=`, `!=`, `<>`
+- Operadores lógicos: `AND`, `OR`, `NOT`
+- Operadores especiales: `IN`, `NOT IN`, `LIKE`, `BETWEEN`
+- Expresiones matemáticas con funciones de agregación
+
+**❌ No puedes usar en HAVING:**
+- Columnas que no están en GROUP BY (a menos que sean agregadas)
+- Subconsultas complejas correlacionadas (mejor usar WHERE o JOIN)
+
+### Uso de Alias en HAVING
+
+MySQL permite usar alias definidos en SELECT dentro de HAVING.
+
+**Ejemplo**:
+```sql
+SELECT 
+    e.nombre,
+    AVG(i.nota) as promedio_notas,
+    COUNT(i.id) as cantidad_materias
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE i.nota IS NOT NULL
+GROUP BY e.id, e.nombre
+HAVING promedio_notas > 7 AND cantidad_materias >= 3;  -- Usa alias
+```
+
+**Ventajas**:
+- ✅ Más legible y fácil de entender
+- ✅ Evita repetir expresiones largas
+- ✅ Más fácil de mantener
+
+---
+
+## 13. Subconsultas (Subqueries)
+
+### Concepto Fundamental
+
+Una **subconsulta** es una consulta SQL dentro de otra consulta. Se ejecuta primero y su resultado se usa en la consulta principal.
+
+**¿Qué es exactamente?**
+Es una consulta completa (con SELECT, FROM, WHERE, etc.) que está "anidada" dentro de otra consulta. La subconsulta se ejecuta primero, y su resultado se usa como parte de la consulta externa.
+
+**Analogía**: Es como hacer una pregunta dentro de otra pregunta:
+- **Pregunta externa**: "¿Quiénes son los estudiantes que tienen un promedio mayor al promedio general?"
+- **Pregunta interna** (subconsulta): "¿Cuál es el promedio general de todos los estudiantes?"
+- **Proceso**: 
+  1. Primero se responde la pregunta interna: "El promedio general es 7.5"
+  2. Luego se usa ese resultado en la pregunta externa: "¿Qué estudiantes tienen promedio > 7.5?"
+
+**¿Por qué usar subconsultas?**
+- ✅ Permiten hacer comparaciones con valores calculados
+- ✅ Verificar existencia de datos (EXISTS)
+- ✅ Simplificar consultas complejas dividiéndolas en partes
+- ✅ Hacer cálculos que requieren múltiples pasos
+
+### Tipos de Subconsultas
+
+#### 1. Subconsultas Escalares
+
+**Definición**: Devuelven un **solo valor** (una fila, una columna).
+
+**Cuándo usar**: Cuando necesitas comparar con un valor único calculado.
+
+**Ejemplo**: Encontrar estudiantes con promedio mayor al promedio general.
+```sql
+SELECT 
+    e.nombre,
+    e.apellido,
+    AVG(i.nota) as promedio_personal
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE i.nota IS NOT NULL
+GROUP BY e.id, e.nombre, e.apellido
+HAVING AVG(i.nota) > (
+    SELECT AVG(nota)  -- Subconsulta escalar: devuelve un solo valor (7.5)
+    FROM inscripciones
+    WHERE nota IS NOT NULL
+);
+```
+
+**Características**:
+- Se ejecuta una vez
+- Devuelve un solo valor (número, texto, fecha)
+- Se puede usar en WHERE, HAVING, SELECT
+
+#### 2. Subconsultas con IN / NOT IN
+
+**Definición**: Devuelven **múltiples valores** (múltiples filas, una columna).
+
+**Cuándo usar**: Cuando necesitas verificar si un valor está en una lista.
+
+**Ejemplo**: Encontrar estudiantes inscritos en materias de programación.
+```sql
+SELECT DISTINCT
+    e.nombre,
+    e.apellido
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE i.id_materia IN (
+    SELECT id  -- Subconsulta: devuelve múltiples valores [1, 5, 12]
+    FROM materias
+    WHERE codigo LIKE 'PROG%'
+);
+```
+
+**IN vs NOT IN**:
+- **IN**: "¿Está este valor en la lista?" → Devuelve registros que SÍ están
+- **NOT IN**: "¿NO está este valor en la lista?" → Devuelve registros que NO están
+
+**⚠️ Cuidado con NULL en NOT IN**: Si la subconsulta devuelve NULL, NOT IN puede dar resultados inesperados. Mejor usar NOT EXISTS en esos casos.
+
+#### 3. Subconsultas Correlacionadas
+
+**Definición**: La subconsulta hace referencia a columnas de la consulta externa.
+
+**Características**:
+- Se ejecuta **una vez por cada fila** de la consulta externa
+- Puede ser menos eficiente que otras alternativas
+- Útil cuando necesitas comparar con valores específicos de cada fila
+
+**Ejemplo**: Encontrar estudiantes con nota mayor al promedio de su materia específica.
+```sql
+SELECT 
+    e.nombre,
+    e.apellido,
+    m.nombre as materia,
+    i.nota
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+INNER JOIN materias m ON i.id_materia = m.id
+WHERE i.nota > (
+    SELECT AVG(nota)  -- Subconsulta correlacionada: usa i.id_materia de la fila actual
+    FROM inscripciones
+    WHERE id_materia = i.id_materia  -- Referencia a la consulta externa
+    AND nota IS NOT NULL
+);
+```
+
+#### 4. Subconsultas con EXISTS / NOT EXISTS
+
+**Definición**: Verifican si existe al menos una fila que cumple una condición.
+
+**Cuándo usar**: Cuando solo necesitas saber si existe algo, no los datos en sí.
+
+**Ejemplo**: Encontrar estudiantes que tienen al menos una nota mayor a 9.
+```sql
+SELECT 
+    e.nombre,
+    e.apellido
+FROM estudiantes e
+WHERE EXISTS (
+    SELECT 1  -- No importa qué selecciones, solo importa si existe
+    FROM inscripciones i
+    WHERE i.id_estudiante = e.id
+    AND i.nota > 9
+);
+```
+
+**EXISTS vs IN**:
+- **EXISTS**: Se detiene cuando encuentra la primera coincidencia (más eficiente)
+- **IN**: Debe evaluar todos los valores de la lista completa
+- **EXISTS** es generalmente más eficiente para verificar existencia
+
+### Lugares Donde Pueden Estar las Subconsultas
+
+#### 1. Subconsultas en WHERE
+
+**Uso**: Filtrar filas según condiciones que requieren cálculos.
+
+**Ejemplo**: Estudiantes con promedio mayor al promedio general.
+```sql
+SELECT 
+    e.nombre,
+    e.apellido,
+    AVG(i.nota) as promedio
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE i.nota IS NOT NULL
+GROUP BY e.id, e.nombre, e.apellido
+HAVING AVG(i.nota) > (
+    SELECT AVG(nota)  -- Subconsulta en HAVING
+    FROM inscripciones
+    WHERE nota IS NOT NULL
+);
+```
+
+#### 2. Subconsultas en HAVING
+
+**Uso**: Filtrar grupos según condiciones que requieren cálculos.
+
+**Ejemplo**: Materias con más estudiantes que el promedio.
+```sql
+SELECT 
+    m.nombre,
+    COUNT(i.id) as cantidad_estudiantes
+FROM materias m
+LEFT JOIN inscripciones i ON m.id = i.id_materia
+GROUP BY m.id, m.nombre
+HAVING COUNT(i.id) > (
+    SELECT AVG(cantidad)  -- Subconsulta en HAVING
+    FROM (
+        SELECT COUNT(id) as cantidad
+        FROM inscripciones
+        GROUP BY id_materia
+    ) AS promedios
+);
+```
+
+#### 3. Subconsultas en SELECT
+
+**Uso**: Agregar información calculada para cada fila.
+
+**Ejemplo**: Mostrar cada estudiante con su cantidad de materias.
+```sql
+SELECT 
+    e.nombre,
+    e.apellido,
+    (
+        SELECT COUNT(*)  -- Subconsulta en SELECT
+        FROM inscripciones i
+        WHERE i.id_estudiante = e.id
+    ) as cantidad_materias
+FROM estudiantes e;
+```
+
+**⚠️ Cuidado**: Estas subconsultas se ejecutan para cada fila, pueden ser lentas con muchos registros. Considera usar JOINs con GROUP BY como alternativa más eficiente.
+
+#### 4. Subconsultas en FROM (Tablas Derivadas)
+
+**Uso**: Usar el resultado de una consulta como tabla temporal.
+
+**Ejemplo**: Promedio de promedios por materia.
+```sql
+SELECT 
+    AVG(promedio_materia) as promedio_general
+FROM (
+    SELECT 
+        m.nombre,
+        AVG(i.nota) as promedio_materia  -- Subconsulta en FROM
+    FROM materias m
+    INNER JOIN inscripciones i ON m.id = i.id_materia
+    WHERE i.nota IS NOT NULL
+    GROUP BY m.id, m.nombre
+) AS promedios_por_materia;
+```
+
+#### 5. Subconsultas en JOIN
+
+**Uso**: Unir con el resultado de una consulta.
+
+**Ejemplo**: Estudiantes con información de su mejor nota.
+```sql
+SELECT 
+    e.nombre,
+    e.apellido,
+    mejores_notas.mejor_nota
+FROM estudiantes e
+INNER JOIN (
+    SELECT 
+        id_estudiante,
+        MAX(nota) as mejor_nota  -- Subconsulta en JOIN
+    FROM inscripciones
+    WHERE nota IS NOT NULL
+    GROUP BY id_estudiante
+) AS mejores_notas ON e.id = mejores_notas.id_estudiante;
+```
+
+### Subconsultas vs JOINs: ¿Cuándo Usar Cada Uno?
+
+**Usa Subconsultas cuando**:
+- ✅ Necesitas comparar con un valor calculado (promedio, máximo, etc.)
+- ✅ Necesitas verificar existencia (EXISTS)
+- ✅ La lógica es más clara con subconsultas
+- ✅ Necesitas un solo valor escalar
+
+**Usa JOINs cuando**:
+- ✅ Necesitas combinar datos de múltiples tablas
+- ✅ Necesitas mostrar columnas de múltiples tablas
+- ✅ Quieres mejor rendimiento (generalmente más eficiente)
+- ✅ La relación es directa entre tablas
+
+---
+
+## 14. CASE WHEN: Lógica Condicional
+
+### Concepto Fundamental
+
+**CASE WHEN** es el equivalente SQL de las estructuras condicionales `if-else` en programación.
+
+**¿Por qué existe CASE WHEN?**
+A veces necesitas clasificar o transformar datos según condiciones. Por ejemplo, convertir números en texto ("Excelente", "Bueno", etc.) o aplicar diferentes transformaciones según valores. CASE WHEN te permite hacer esto directamente en SQL.
+
+**Propósito**: Clasificar, categorizar o transformar datos según condiciones.
+
+### Sintaxis Básica
+
+**Estructura**:
+```sql
+CASE
+    WHEN condicion1 THEN valor1
+    WHEN condicion2 THEN valor2
+    WHEN condicion3 THEN valor3
+    ELSE valor_por_defecto
+END
+```
+
+**Características**:
+- Se evalúa de arriba hacia abajo
+- Se detiene en la primera condición verdadera
+- Si ninguna condición es verdadera, devuelve el valor de ELSE
+- ELSE es opcional, pero recomendado (evita NULL inesperados)
+
+### Orden de Evaluación
+
+**Importante**: Las condiciones se evalúan en orden. La primera condición verdadera "gana" y se detiene.
+
+**Ejemplo**: Clasificación de notas
+```sql
+SELECT 
+    nombre,
+    nota,
+    CASE
+        WHEN nota >= 9 THEN 'Excelente'
+        WHEN nota >= 8 THEN 'Muy Bueno'
+        WHEN nota >= 7 THEN 'Bueno'
+        WHEN nota >= 6 THEN 'Regular'
+        ELSE 'Necesita Apoyo'
+    END as categoria
+FROM inscripciones
+WHERE nota IS NOT NULL;
+```
+
+**⚠️ Error común**: Poner condiciones en orden incorrecto
+- **❌ INCORRECTO**: `WHEN nota >= 7 THEN 'Bueno'` antes de `WHEN nota >= 9 THEN 'Excelente'`
+  - Si nota = 9, devuelve 'Bueno' porque la primera condición es verdadera
+- **✅ CORRECTO**: Ordenar de mayor a menor (o de más específico a menos específico)
+
+### Tipos de CASE WHEN
+
+#### CASE Buscado (con condiciones)
+
+**Sintaxis**: Evalúa múltiples condiciones booleanas (comparaciones, rangos, etc.).
+
+**Ejemplo**: Clasificar estudiantes según su promedio.
+```sql
+SELECT 
+    e.nombre,
+    e.apellido,
+    AVG(i.nota) as promedio,
+    CASE
+        WHEN AVG(i.nota) >= 9 THEN 'Excelente'
+        WHEN AVG(i.nota) >= 7 THEN 'Bueno'
+        WHEN AVG(i.nota) >= 6 THEN 'Regular'
+        ELSE 'Necesita Apoyo'
+    END as categoria
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE i.nota IS NOT NULL
+GROUP BY e.id, e.nombre, e.apellido;
+```
+
+#### CASE Simple (con expresión)
+
+**Sintaxis**: Evalúa una expresión y compara con valores específicos.
+
+**Ejemplo**: Clasificar especialidades de docentes en categorías.
+```sql
+SELECT 
+    nombre,
+    especialidad,
+    CASE especialidad
+        WHEN 'Programación' THEN 'Tecnología'
+        WHEN 'Matemática' THEN 'Ciencias Exactas'
+        WHEN 'Física' THEN 'Ciencias Exactas'
+        ELSE 'Otra'
+    END as categoria
+FROM docentes;
+```
+
+### Usos Comunes de CASE WHEN
+
+#### 1. Clasificación y Categorización
+
+**Para qué sirve**: Clasificar registros en categorías según valores numéricos o condiciones.
+
+**Ejemplo**: Clasificar estudiantes según su promedio académico.
+```sql
+SELECT 
+    e.nombre,
+    AVG(i.nota) as promedio,
+    CASE
+        WHEN AVG(i.nota) >= 9 THEN 'Excelente'
+        WHEN AVG(i.nota) >= 8 THEN 'Muy Bueno'
+        WHEN AVG(i.nota) >= 7 THEN 'Bueno'
+        WHEN AVG(i.nota) >= 6 THEN 'Regular'
+        ELSE 'Necesita apoyo'
+    END as categoria
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE i.nota IS NOT NULL
+GROUP BY e.id, e.nombre;
+```
+
+#### 2. Transformación de Valores
+
+**Para qué sirve**: Convertir códigos, abreviaciones o valores técnicos en descripciones legibles.
+
+**Ejemplo**: Convertir códigos de materias a nombres completos.
+```sql
+SELECT 
+    codigo,
+    CASE codigo
+        WHEN 'PROG1' THEN 'Programación I'
+        WHEN 'BD1' THEN 'Base de Datos I'
+        WHEN 'MAT1' THEN 'Matemática I'
+        ELSE codigo
+    END as nombre_completo
+FROM materias;
+```
+
+#### 3. CASE en Agregaciones
+
+**Para qué sirve**: Contar o sumar registros que cumplen diferentes condiciones en una sola consulta.
+
+**Ejemplo**: Contar estudiantes por categoría de nota en cada materia.
+```sql
+SELECT 
+    m.nombre as materia,
+    COUNT(CASE WHEN i.nota >= 9 THEN 1 END) as excelentes,
+    COUNT(CASE WHEN i.nota >= 7 AND i.nota < 9 THEN 1 END) as buenos,
+    COUNT(CASE WHEN i.nota < 7 THEN 1 END) as regulares
+FROM materias m
+LEFT JOIN inscripciones i ON m.id = i.id_materia
+WHERE i.nota IS NOT NULL
+GROUP BY m.id, m.nombre;
+```
+
+**Cómo funciona**: `COUNT(CASE WHEN condición THEN 1 END)` cuenta solo las filas que cumplen la condición.
+
+#### 4. CASE en ORDER BY
+
+**Para qué sirve**: Ordenar resultados según una prioridad personalizada, no alfabética o numérica.
+
+**Ejemplo**: Ordenar tareas por prioridad personalizada.
+```sql
+SELECT 
+    nombre,
+    prioridad
+FROM tareas
+ORDER BY 
+    CASE prioridad
+        WHEN 'Urgente' THEN 1
+        WHEN 'Normal' THEN 2
+        WHEN 'Bajo' THEN 3
+        ELSE 4
+    END;
+```
+
+---
+
+## 15. UNION: Combinación de Resultados
+
+### Concepto Fundamental
+
+**UNION** combina los resultados de dos o más consultas SELECT en un solo conjunto de resultados.
+
+**Definición simple**: UNION combina resultados de dos o más consultas en una sola lista.
+
+**¿Por qué usar UNION?**
+A veces tienes datos similares en diferentes tablas o necesitas combinar resultados de diferentes consultas. En lugar de hacer consultas separadas y combinarlas manualmente, UNION lo hace automáticamente en una sola operación.
+
+**Propósito**: Unir datos de diferentes fuentes o consultas en una sola lista.
+
+**Analogía**: Es como juntar dos listas de invitados:
+- Lista 1: Invitados de la familia
+- Lista 2: Invitados de amigos
+- UNION: Crea una lista única con todos los invitados (eliminando duplicados si los hay)
+
+### UNION vs UNION ALL
+
+| Característica | UNION | UNION ALL |
+|----------------|-------|-----------|
+| **Elimina duplicados** | ✅ SÍ | ❌ NO |
+| **Rendimiento** | Más lento (debe verificar duplicados) | Más rápido |
+| **Cuándo usar** | Cuando no quieres duplicados | Cuando quieres todos los registros |
+
+**Ejemplo**:
+```sql
+-- UNION: Elimina duplicados
+SELECT nombre FROM estudiantes
+UNION
+SELECT nombre FROM docentes;
+
+-- UNION ALL: Mantiene todos los registros (más rápido)
+SELECT nombre FROM estudiantes
+UNION ALL
+SELECT nombre FROM docentes;
+```
+
+### Reglas de UNION
+
+**Regla 1**: El número de columnas debe ser igual en todas las consultas
+- ✅ **CORRECTO**: Ambas consultas tienen 2 columnas (nombre, apellido)
+- ❌ **INCORRECTO**: Una consulta tiene 2 columnas y la otra solo 1
+
+**Regla 2**: Los tipos de datos deben ser compatibles
+- ✅ **CORRECTO**: Ambas columnas son del mismo tipo (VARCHAR, INT, etc.)
+- ⚠️ **CUIDADO**: Puedes convertir tipos con CAST, pero puede causar problemas si no son realmente compatibles
+
+**Regla 3**: Los nombres de columnas vienen de la primera consulta
+- Si la primera consulta usa alias (ej: `nombre AS nombre_completo`), ese será el nombre de la columna resultante
+- Las demás consultas pueden tener diferentes nombres, pero se usarán los de la primera
+
+### Ejemplos Prácticos
+
+#### Combinar Tablas Similares
+
+**Para qué sirve**: Crear una lista unificada de personas de diferentes tablas.
+
+**Ejemplo**: Lista única de estudiantes y docentes para comunicación masiva.
+```sql
+SELECT 
+    CONCAT(nombre, ' ', apellido) as nombre_completo,
+    email,
+    'Estudiante' as tipo
+FROM estudiantes
+UNION
+SELECT 
+    CONCAT(nombre, ' ', apellido) as nombre_completo,
+    email,
+    'Docente' as tipo
+FROM docentes
+ORDER BY nombre_completo;
+```
+
+#### Combinar Resultados de Diferentes Criterios
+
+**Para qué sirve**: Unir resultados que cumplen diferentes condiciones en una sola lista.
+
+**Ejemplo**: Materias destacadas por diferentes razones.
+```sql
+-- Materias con más de 10 estudiantes
+SELECT 
+    nombre,
+    'Por cantidad' as motivo
+FROM materias m
+INNER JOIN inscripciones i ON m.id = i.id_materia
+GROUP BY m.id, m.nombre
+HAVING COUNT(i.id) > 10
+
+UNION
+
+-- Materias con promedio mayor a 8
+SELECT 
+    nombre,
+    'Por rendimiento' as motivo
+FROM materias m
+INNER JOIN inscripciones i ON m.id = i.id_materia
+WHERE i.nota IS NOT NULL
+GROUP BY m.id, m.nombre
+HAVING AVG(i.nota) > 8;
+```
+
+### ORDER BY con UNION
+
+**IMPORTANTE**: ORDER BY solo puede aparecer al final, después de todas las consultas UNION.
+
+**Regla**: El ordenamiento se aplica al resultado final combinado, no a cada consulta individual.
+
+**Ejemplo**:
+```sql
+SELECT nombre FROM estudiantes
+UNION
+SELECT nombre FROM docentes
+ORDER BY nombre;  -- ✅ CORRECTO: Ordenar después de combinar todas las consultas
+```
+
+### UNION Múltiple
+
+Puedes combinar más de dos consultas en una sola operación UNION.
+
+**Ejemplo**: Combinar estudiantes, docentes y personal administrativo en una lista única.
+```sql
+SELECT nombre, 'Estudiante' as tipo FROM estudiantes
+UNION
+SELECT nombre, 'Docente' as tipo FROM docentes
+UNION
+SELECT nombre, 'Administrativo' as tipo FROM personal
+ORDER BY nombre;
+```
+
+---
+
+## 16. Funciones de Fecha y Hora
+
+### Concepto Fundamental
+
+Las funciones de fecha permiten trabajar con fechas y horas: extraer partes, calcular diferencias, formatear, etc.
+
+**¿Por qué son importantes?**
+Las fechas en bases de datos suelen almacenarse en formato estándar (YYYY-MM-DD), pero para reportes y análisis necesitas:
+- Formatearlas de manera legible (15/01/2025)
+- Calcular períodos (último mes, último año)
+- Extraer componentes (año, mes, día)
+- Calcular diferencias (días transcurridos, antigüedad)
+
+**Sin funciones de fecha**: Tendrías que procesar las fechas fuera de SQL, lo cual es menos eficiente y más complicado.
+
+### Funciones Básicas
+
+#### Obtener Fecha/Hora Actual
+
+**Para qué sirve**: Obtener la fecha y hora del sistema en el momento de ejecutar la consulta.
+
+**Funciones disponibles**:
+- `NOW()`: Fecha y hora completa (ej: '2025-01-15 14:30:45')
+- `CURDATE()`: Solo fecha actual (ej: '2025-01-15')
+- `CURTIME()`: Solo hora actual (ej: '14:30:45')
+
+**Casos de uso**:
+- Filtrar registros recientes (último mes, última semana)
+- Calcular antigüedad desde una fecha hasta hoy
+- Timestamps automáticos en reportes
+
+#### Extraer Partes de Fecha
+
+**Para qué sirve**: Obtener componentes específicos de una fecha para análisis o formateo.
+
+**Funciones disponibles**:
+- `YEAR(fecha)`: Año (ej: 2025)
+- `MONTH(fecha)`: Mes del año (1-12)
+- `DAY(fecha)`: Día del mes (1-31)
+- `DAYNAME(fecha)`: Nombre del día ('Monday', 'Tuesday', etc.)
+- `DAYOFWEEK(fecha)`: Número del día (1=Domingo, 7=Sábado)
+- `WEEK(fecha)`: Número de semana del año
+
+**Casos de uso**:
+- Análisis por año, mes o día
+- Reportes agrupados por períodos
+- Filtrar por días específicos de la semana
+
+### Cálculos con Fechas
+
+#### Agregar Tiempo
+
+**Para qué sirve**: Calcular fechas futuras sumando días, meses o años a una fecha base.
+
+**Sintaxis**: `DATE_ADD(fecha, INTERVAL cantidad unidad)`
+
+**Unidades disponibles**: DAY, MONTH, YEAR, WEEK, HOUR, MINUTE, SECOND
+
+**Ejemplos**:
+```sql
+-- Sumar 30 días
+SELECT DATE_ADD('2025-01-15', INTERVAL 30 DAY);  -- Resultado: '2025-02-14'
+
+-- Sumar 1 mes
+SELECT DATE_ADD('2025-01-15', INTERVAL 1 MONTH);  -- Resultado: '2025-02-15'
+
+-- Sumar 1 año
+SELECT DATE_ADD('2025-01-15', INTERVAL 1 YEAR);  -- Resultado: '2026-01-15'
+```
+
+**Casos de uso**:
+- Calcular fecha de vencimiento (fecha inicio + 30 días)
+- Encontrar fechas dentro de un rango futuro
+- Programar eventos futuros basados en fechas existentes
+
+#### Restar Tiempo
+
+**Para qué sirve**: Calcular fechas pasadas o encontrar el inicio de un período.
+
+**Sintaxis**: `DATE_SUB(fecha, INTERVAL cantidad unidad)`
+
+**Ejemplos**:
+```sql
+-- Restar 30 días
+SELECT DATE_SUB('2025-01-15', INTERVAL 30 DAY);  -- Resultado: '2024-12-16'
+
+-- Restar 1 mes
+SELECT DATE_SUB('2025-01-15', INTERVAL 1 MONTH);  -- Resultado: '2024-12-15'
+```
+
+**Casos de uso**:
+- Encontrar registros del último mes (fecha actual - 1 mes)
+- Calcular fecha de inicio de un período
+- Filtrar por ventanas de tiempo hacia atrás
+
+#### Diferencia entre Fechas
+
+**Para qué sirve**: Calcular cuánto tiempo ha transcurrido entre dos fechas.
+
+**Sintaxis**: `DATEDIFF(fecha1, fecha2)`
+
+**Resultado**: Devuelve un número (días de diferencia)
+
+**Ejemplos**:
+```sql
+-- Días transcurridos desde una inscripción hasta hoy
+SELECT 
+    nombre,
+    fecha_inscripcion,
+    DATEDIFF(CURDATE(), fecha_inscripcion) as dias_transcurridos
+FROM inscripciones;
+
+-- Diferencia entre dos fechas específicas
+SELECT DATEDIFF('2025-01-15', '2025-01-01');  -- Resultado: 14 días
+```
+
+**Casos de uso**:
+- Días transcurridos desde una inscripción hasta hoy
+- Tiempo entre fecha de inicio y fin de un proceso
+- Antigüedad en días, semanas o meses
+
+#### Calcular Edad
+
+**Para qué sirve**: Calcular la edad de una persona desde su fecha de nacimiento.
+
+**Métodos**:
+- **Aproximado**: `YEAR(CURDATE()) - YEAR(fecha_nacimiento)` - Solo considera años, puede tener error de 1 año
+- **Exacto**: `DATEDIFF(CURDATE(), fecha_nacimiento) / 365.25` - Considera días y años bisiestos
+
+**Ejemplo**:
+```sql
+SELECT 
+    nombre,
+    fecha_nacimiento,
+    YEAR(CURDATE()) - YEAR(fecha_nacimiento) as edad_aproximada,
+    FLOOR(DATEDIFF(CURDATE(), fecha_nacimiento) / 365.25) as edad_exacta
+FROM estudiantes;
+```
+
+**Nota**: Dividir por 365.25 considera años bisiestos para mayor precisión.
+
+### Formatear Fechas
+
+#### DATE_FORMAT
+
+**Para qué sirve**: Formatear fechas en diferentes formatos legibles para reportes o interfaces.
+
+**Sintaxis**: `DATE_FORMAT(fecha, formato)`
+
+**Formatos comunes**:
+- `%Y` - Año completo (4 dígitos): 2025
+- `%y` - Año corto (2 dígitos): 25
+- `%m` - Mes numérico (01-12)
+- `%d` - Día (01-31)
+- `%W` - Nombre del día: Monday, Tuesday
+- `%M` - Nombre del mes: January, February
+- `%H` - Hora (00-23)
+- `%i` - Minutos (00-59)
+- `%s` - Segundos (00-59)
+
+**Ejemplos de formatos**:
+```sql
+-- Formato español
+SELECT DATE_FORMAT('2025-01-15', '%d/%m/%Y');  -- Resultado: '15/01/2025'
+
+-- Formato ISO
+SELECT DATE_FORMAT('2025-01-15', '%Y-%m-%d');  -- Resultado: '2025-01-15'
+
+-- Formato completo
+SELECT DATE_FORMAT('2025-01-15 14:30:45', '%W, %d de %M de %Y');  
+-- Resultado: 'Monday, 15 de January de 2025'
+
+-- Con hora
+SELECT DATE_FORMAT('2025-01-15 14:30:45', '%d/%m/%Y %H:%i:%s');  
+-- Resultado: '15/01/2025 14:30:45'
+```
+
+**Casos de uso**:
+- Formatear fechas para reportes legibles
+- Adaptar formatos según región o preferencia
+- Mostrar fechas en interfaces de usuario
+
+### Ejemplos Prácticos
+
+#### Filtrar por Rango de Fechas
+
+**Para qué sirve**: Encontrar registros dentro de un período específico (último mes, último año, etc.).
+
+**Ejemplo**: Inscripciones del último mes.
+```sql
+SELECT 
+    e.nombre,
+    e.apellido,
+    i.fecha_inscripcion
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante
+WHERE i.fecha_inscripcion >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+AND i.fecha_inscripcion <= CURDATE();
+```
+
+#### Calcular Antigüedad
+
+**Para qué sirve**: Determinar cuánto tiempo ha transcurrido desde una fecha de inicio.
+
+**Ejemplo**: Años de antigüedad de docentes.
+```sql
+SELECT 
+    nombre,
+    apellido,
+    fecha_ingreso,
+    YEAR(CURDATE()) - YEAR(fecha_ingreso) as años_antiguedad
+FROM docentes;
+```
+
+#### Formatear para Reportes
+
+**Para qué sirve**: Presentar fechas de manera legible y profesional en reportes.
+
+**Ejemplo**: Mostrar fechas formateadas con días transcurridos.
+```sql
+SELECT 
+    e.nombre,
+    DATE_FORMAT(i.fecha_inscripcion, '%d/%m/%Y') as fecha_formateada,
+    DATEDIFF(CURDATE(), i.fecha_inscripcion) as dias_transcurridos
+FROM estudiantes e
+INNER JOIN inscripciones i ON e.id = i.id_estudiante;
+```
+
+---
+
+## 17. Funciones de Texto
+
+### Concepto Fundamental
+
+Las funciones de texto permiten manipular y transformar cadenas de caracteres: concatenar, extraer partes, cambiar mayúsculas/minúsculas, etc.
+
+**¿Por qué son importantes?**
+Los datos en bases de datos pueden estar almacenados de manera que no sea ideal para mostrar:
+- Nombres y apellidos en columnas separadas (necesitas unirlos)
+- Emails de los que necesitas extraer el dominio
+- Texto con espacios extra que necesitas limpiar
+- Códigos que necesitas formatear
+
+**Sin funciones de texto**: Tendrías que procesar el texto fuera de SQL, duplicando trabajo y haciendo el código más complejo.
+
+### Funciones de Concatenación
+
+#### CONCAT
+
+**Para qué sirve**: Unir múltiples cadenas de texto en una sola.
+
+**Ejemplo**: Crear nombre completo uniendo nombre y apellido.
+```sql
+SELECT 
+    CONCAT('Juan', ' ', 'Pérez') as nombre_completo;  -- Resultado: 'Juan Pérez'
+
+SELECT 
+    CONCAT(nombre, ' ', apellido) as nombre_completo
+FROM estudiantes;
+```
+
+**Casos de uso**:
+- Crear nombres completos
+- Construir direcciones completas
+- Formatear texto combinando múltiples campos
+
+#### CONCAT_WS
+
+**Para qué sirve**: Unir cadenas con un separador común entre todas.
+
+**Ejemplo**: Listar nombres separados por comas.
+```sql
+SELECT CONCAT_WS(', ', 'Juan', 'María', 'Pedro');  -- Resultado: 'Juan, María, Pedro'
+
+SELECT CONCAT_WS(' - ', nombre, apellido) as nombre_completo
+FROM estudiantes;  -- Resultado: 'Juan - Pérez'
+```
+
+**Ventaja**: Maneja NULL automáticamente (los ignora, no interrumpe la concatenación).
+
+**Casos de uso**:
+- Listas separadas por comas
+- Formatear múltiples valores con separador
+- Construir texto cuando algunos campos pueden ser NULL
+
+### Funciones de Extracción
+
+#### SUBSTRING
+
+**Para qué sirve**: Extraer una parte específica de una cadena de texto.
+
+**Sintaxis**: `SUBSTRING(texto, inicio, longitud)` o `SUBSTRING(texto, inicio)`
+
+**Ejemplo**: Extraer los primeros caracteres o una sección del medio.
+```sql
+SELECT SUBSTRING('Hola Mundo', 1, 4);  -- Resultado: 'Hola' (desde posición 1, 4 caracteres)
+SELECT SUBSTRING('Hola Mundo', 6);     -- Resultado: 'Mundo' (desde posición 6 hasta el final)
+SELECT SUBSTRING(email, 1, 5) FROM estudiantes;  -- Primeros 5 caracteres del email
+```
+
+**Casos de uso**:
+- Extraer códigos o prefijos
+- Obtener partes específicas de texto estructurado
+- Truncar texto para mostrar
+
+#### LEFT y RIGHT
+
+**Para qué sirve**: Extraer caracteres desde el inicio o el final de una cadena.
+
+**Ejemplo**:
+```sql
+SELECT LEFT('Hola Mundo', 4);   -- Resultado: 'Hola' (primeros 4 caracteres)
+SELECT RIGHT('Hola Mundo', 5);  -- Resultado: 'Mundo' (últimos 5 caracteres)
+```
+
+**Casos de uso**:
+- Extraer prefijos o sufijos
+- Obtener últimos dígitos de códigos
+- Mostrar abreviaciones
+
+#### POSITION / LOCATE
+
+**Para qué sirve**: Encontrar la posición de un carácter o subcadena dentro de un texto.
+
+**Ejemplo**: Extraer dominio de email.
+```sql
+SELECT 
+    email,
+    POSITION('@' IN email) as posicion_arroba,
+    SUBSTRING(email, POSITION('@' IN email) + 1) as dominio
+FROM estudiantes;
+```
+
+**Casos de uso**:
+- Extraer dominio de emails
+- Encontrar delimitadores en texto estructurado
+- Dividir texto en partes según separadores
+
+### Funciones de Transformación
+
+#### UPPER y LOWER
+
+**Para qué sirve**: Convertir texto a mayúsculas o minúsculas.
+
+**Ejemplo**: Normalizar nombres para comparaciones o presentación.
+```sql
+SELECT UPPER('Juan Pérez');   -- Resultado: 'JUAN PÉREZ'
+SELECT LOWER('JUAN PÉREZ');   -- Resultado: 'juan pérez'
+SELECT UPPER(CONCAT(nombre, ' ', apellido)) as nombre_completo
+FROM estudiantes;
+```
+
+**Casos de uso**:
+- Normalizar datos para comparaciones (case-insensitive)
+- Formatear texto para reportes
+- Estandarizar entrada de datos
+
+#### TRIM, LTRIM, RTRIM
+
+**Para qué sirve**: Eliminar espacios en blanco innecesarios del texto.
+
+**Ejemplo**: Limpiar datos ingresados con espacios extra.
+```sql
+SELECT TRIM('  Juan  ');    -- Resultado: 'Juan' (elimina espacios al inicio y final)
+SELECT LTRIM('  Juan');     -- Resultado: 'Juan' (elimina solo espacios al inicio)
+SELECT RTRIM('Juan  ');     -- Resultado: 'Juan' (elimina solo espacios al final)
+```
+
+**Casos de uso**:
+- Limpiar datos importados
+- Normalizar entrada de usuarios
+- Preparar datos para comparaciones exactas
+
+### Funciones de Reemplazo y Búsqueda
+
+#### REPLACE
+
+**Para qué sirve**: Reemplazar una subcadena por otra en un texto.
+
+**Ejemplo**: Expandir abreviaciones o corregir texto.
+```sql
+SELECT REPLACE('PROG1', 'PROG', 'PROGRAMACION');  -- Resultado: 'PROGRAMACION1'
+SELECT REPLACE(codigo, '_', '-') FROM materias;    -- Reemplaza guiones bajos por guiones
+```
+
+**Casos de uso**:
+- Normalizar códigos o abreviaciones
+- Corregir errores comunes en datos
+- Transformar formato de texto
+
+#### LENGTH y CHAR_LENGTH
+
+**Para qué sirve**: Obtener la longitud de una cadena de texto.
+
+**Ejemplo**: Validar o analizar longitud de datos.
+```sql
+SELECT LENGTH('Hola');        -- Resultado: 4 (en bytes, puede variar con caracteres especiales)
+SELECT CHAR_LENGTH('Hola');   -- Resultado: 4 (en caracteres, más preciso)
+```
+
+**Diferencia importante**:
+- `LENGTH()`: Cuenta bytes (puede ser diferente con caracteres especiales como ñ, á, etc.)
+- `CHAR_LENGTH()`: Cuenta caracteres (recomendado para texto con caracteres especiales)
+
+**Casos de uso**:
+- Validar longitud de campos
+- Truncar texto a cierta longitud
+- Análisis de datos de texto
+
+### Ejemplos Prácticos
+
+#### Nombre Completo
+
+**Para qué sirve**: Crear nombres completos formateados para reportes o interfaces.
+
+**Ejemplo**: 
+```sql
+SELECT 
+    CONCAT(nombre, ' ', apellido) as nombre_completo,
+    UPPER(CONCAT(nombre, ' ', apellido)) as nombre_completo_mayusculas
+FROM estudiantes;
+```
+
+#### Extraer Dominio de Email
+
+**Para qué sirve**: Analizar dominios de correo electrónico para agrupar o filtrar.
+
+**Ejemplo**: Extraer la parte después del @ de un email.
+```sql
+SELECT 
+    email,
+    SUBSTRING(email, POSITION('@' IN email) + 1) as dominio
+FROM estudiantes;
+```
+
+#### Formatear Códigos
+
+**Para qué sirve**: Normalizar o mejorar la presentación de códigos.
+
+**Ejemplo**: 
+```sql
+SELECT 
+    codigo,
+    UPPER(codigo) as codigo_mayusculas,
+    REPLACE(codigo, '_', '-') as codigo_con_guiones
+FROM materias;
+```
+
+---
+
+## 18. Triggers, Stored Procedures y Functions
 
 ### Triggers
 
@@ -2443,7 +3675,7 @@ DROP FUNCTION IF EXISTS GetCountryPopulation;
 
 ---
 
-## 12. Conexión desde Node.js
+## 19. Conexión desde Node.js
 
 ### Instalación
 
@@ -2953,6 +4185,44 @@ ORDER BY e.apellido, e.nombre, m.nombre;
 - `SUM`: Sumar valores
 - `AVG`: Promedio
 - `MIN`/`MAX`: Mínimo/Máximo
+
+### Orden de Ejecución SQL
+1. FROM → 2. JOIN → 3. WHERE → 4. GROUP BY → 5. HAVING → 6. SELECT → 7. ORDER BY → 8. LIMIT
+
+### HAVING
+- ✅ Filtra grupos después de GROUP BY
+- ✅ Puede usar funciones de agregación y alias
+- ✅ Se combina con WHERE para filtros completos
+
+### Subconsultas
+- ✅ Consultas dentro de consultas
+- ✅ Escalares (un valor), con IN (múltiples valores), correlacionadas, EXISTS
+- ✅ Pueden estar en: WHERE, HAVING, SELECT, FROM, JOIN
+- ✅ Útiles para comparaciones y verificaciones
+
+### CASE WHEN
+- ✅ Condicionales en SQL
+- ✅ Útil para clasificar y formatear datos
+- ✅ Se evalúa de arriba hacia abajo
+- ✅ Puede usarse en SELECT, ORDER BY, GROUP BY
+
+### UNION
+- ✅ Combina resultados de múltiples consultas
+- ✅ UNION elimina duplicados, UNION ALL los mantiene
+- ✅ Requiere mismo número y tipo de columnas
+- ✅ ORDER BY solo al final
+
+### Funciones de Fecha
+- ✅ NOW(), CURDATE(), DATE_FORMAT(), DATEDIFF()
+- ✅ DATE_ADD(), DATE_SUB() para calcular
+- ✅ Útiles para cálculos y formateo de fechas
+- ✅ Considera años bisiestos en cálculos de edad
+
+### Funciones de Texto
+- ✅ CONCAT(), SUBSTRING(), UPPER(), LOWER(), TRIM()
+- ✅ REPLACE(), LENGTH(), CHAR_LENGTH()
+- ✅ Útiles para formatear y manipular texto
+- ✅ CHAR_LENGTH() es mejor que LENGTH() para caracteres especiales
 
 ### Seguridad
 - ✅ Siempre usar parámetros preparados (`?`)
