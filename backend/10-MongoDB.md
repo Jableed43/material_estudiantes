@@ -2,9 +2,14 @@
 
 ## 📑 Índice
 1. [Introducción a MongoDB](#1-introducción-a-mongodb)
-2. [BASE: Modelo de Consistencia](#2-base-modelo-de-consistencia)
-3. [Conceptos Fundamentales](#3-conceptos-fundamentales)
-4. [Instalación y Herramientas](#4-instalación-y-herramientas)
+   - [1.1 Transición desde MySQL](#11-transición-desde-mysql)
+   - [1.2 Diccionario de Equivalencias: MySQL ↔ MongoDB](#12-diccionario-de-equivalencias-mysql--mongodb)
+   - [1.3 Comparación Detallada: Conceptos Fundamentales](#13-comparación-detallada-conceptos-fundamentales)
+   - [1.4 Tabla Comparativa Completa](#14-tabla-comparativa-completa)
+   - [1.5 ¿Cuándo usar cada una?](#15-cuándo-usar-cada-una)
+2. [Instalación y Herramientas](#2-instalación-y-herramientas)
+3. [BASE: Modelo de Consistencia](#3-base-modelo-de-consistencia)
+4. [Conceptos Fundamentales](#4-conceptos-fundamentales)
 5. [Operaciones CRUD Básicas](#5-operaciones-crud-básicas)
 6. [Operadores de Consulta](#6-operadores-de-consulta)
 7. [Expresiones de Consulta](#7-expresiones-de-consulta)
@@ -84,7 +89,633 @@
 
 ---
 
-## 2. BASE: Modelo de Consistencia
+## 2. Instalación y Herramientas
+
+> **⚠️ Importante**: Antes de continuar con el resto del contenido, asegúrate de tener MongoDB instalado y funcionando. Esta sección te guiará paso a paso.
+
+### MongoDB Community Server
+El motor de la base de datos (el "servidor"). Es necesario instalarlo para que MongoDB funcione.
+
+**Descarga e Instalación:**
+- **Enlace de descarga**: [https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community)
+- **Windows**: Descargar el instalador `.msi` desde el enlace, ejecutar y seguir el asistente de instalación
+- **Mac**: 
+  ```bash
+  brew install mongodb-community
+  ```
+- **Linux**: 
+  ```bash
+  # Ubuntu/Debian
+  apt-get install mongodb
+  
+  # CentOS/RHEL
+  yum install mongodb
+  ```
+
+**Iniciar el servidor:**
+```bash
+# Windows (después de la instalación, se inicia automáticamente como servicio)
+# O manualmente desde la línea de comandos:
+mongod
+
+# Mac/Linux
+mongod
+```
+
+### MongoDB Compass
+Interfaz gráfica (GUI) oficial de MongoDB. Permite:
+- Visualizar datos de forma gráfica
+- Crear y gestionar índices
+- Ejecutar agregaciones visualmente
+- Administrar bases de datos y colecciones
+- Ejecutar consultas y ver resultados
+- **Incluye un shell integrado** para ejecutar comandos directamente
+
+**Descarga e Instalación:**
+- **Enlace de descarga**: [https://www.mongodb.com/try/download/compass](https://www.mongodb.com/try/download/compass)
+- **Windows**: Descargar el instalador `.msi`, ejecutar y seguir el asistente
+- **Mac**: Descargar el archivo `.dmg` e instalar
+- **Linux**: Descargar el paquete `.deb` o `.rpm` según tu distribución
+
+**Uso:**
+- Abre MongoDB Compass
+- Conecta a `mongodb://localhost:27017` (o tu servidor remoto)
+- Explora tus bases de datos y colecciones visualmente
+
+**⚠️ Nota importante sobre MongoDB Shell:**
+- **Compass incluye un shell integrado** en su interfaz, por lo que puedes ejecutar comandos de MongoDB directamente desde Compass sin necesidad de instalar `mongosh` por separado.
+- Sin embargo, si prefieres usar la **terminal/consola de comandos** para trabajar con MongoDB, necesitarás instalar `mongosh` por separado (ver sección siguiente).
+
+### MongoDB Shell (`mongosh`)
+La consola de comandos moderna para interactuar con la base de datos mediante código JavaScript desde la terminal.
+
+**¿Necesito instalar mongosh si ya tengo Compass?**
+- **NO es estrictamente necesario** si solo usas Compass, ya que Compass incluye un shell integrado.
+- **SÍ es recomendable** si prefieres trabajar desde la terminal, necesitas automatizar tareas con scripts, o quieres usar MongoDB en entornos sin interfaz gráfica.
+
+**Descarga e Instalación:**
+- **Enlace de descarga**: [https://www.mongodb.com/try/download/shell](https://www.mongodb.com/try/download/shell)
+- **Windows**: Descargar el instalador `.msi` y seguir el asistente
+- **Mac**: Descargar el archivo `.tgz` o usar Homebrew:
+  ```bash
+  brew install mongosh
+  ```
+- **Linux**: Descargar el paquete `.deb` o `.rpm` según tu distribución
+
+**Iniciar:**
+```bash
+mongosh
+```
+
+**Conectar a servidor local:**
+```bash
+mongosh "mongodb://localhost:27017"
+```
+
+**Conectar a servidor remoto:**
+```bash
+mongosh "mongodb://usuario:password@servidor:27017/nombre_db"
+```
+
+**Conectar a MongoDB Atlas (nube):**
+```bash
+mongosh "mongodb+srv://usuario:password@cluster.mongodb.net/nombre_db"
+```
+
+### Resumen de Herramientas
+
+| Herramienta | ¿Qué es? | ¿Cuándo usarla? | ¿Es obligatoria? |
+|-------------|----------|-----------------|------------------|
+| **MongoDB Community Server** | El servidor de base de datos | Siempre (necesario para que MongoDB funcione) | ✅ Sí, obligatorio |
+| **MongoDB Compass** | Interfaz gráfica (GUI) | Para visualizar datos, administrar bases de datos, trabajar con interfaz gráfica | ⚠️ Opcional pero muy recomendado |
+| **MongoDB Shell (mongosh)** | Consola de comandos | Para trabajar desde terminal, automatizar tareas, scripts | ⚠️ Opcional (Compass incluye shell integrado) |
+
+**Recomendación para principiantes:**
+1. Instala **MongoDB Community Server** (obligatorio)
+2. Instala **MongoDB Compass** (muy recomendado para empezar)
+3. Instala **mongosh** solo si prefieres trabajar desde la terminal o necesitas automatizar tareas
+
+---
+
+## 1.1 Transición desde MySQL
+
+### Recordando lo que ya sabemos de MySQL
+
+Si vienes de aprender MySQL, ya conoces:
+- ✅ **Tablas** con filas y columnas
+- ✅ **Esquema estricto** (debes definir estructura antes)
+- ✅ **Relaciones** con claves foráneas (FOREIGN KEY)
+- ✅ **JOINs** para consultar múltiples tablas
+- ✅ **SQL** como lenguaje de consulta
+- ✅ **ACID** completo para transacciones
+- ✅ **Normalización** de datos
+
+### ¿Qué es MongoDB?
+
+**MongoDB** es una base de datos **NoSQL orientada a documentos**. A diferencia de MySQL que organiza datos en tablas, MongoDB organiza datos en **documentos** (similares a objetos JSON).
+
+**Analogía simple:**
+- **MySQL**: Como un archivo Excel con hojas (tablas) organizadas en filas y columnas
+- **MongoDB**: Como una carpeta con documentos Word, cada uno con su propia estructura
+
+---
+
+## 1.2 Diccionario de Equivalencias: MySQL ↔ MongoDB
+
+Esta tabla te ayudará a entender cómo se llaman las cosas en cada sistema:
+
+| Concepto MySQL (SQL) | Equivalente MongoDB (NoSQL) | Explicación |
+|---------------------|----------------------------|-------------|
+| **Base de Datos** | **Base de Datos** | Mismo concepto |
+| **Tabla** | **Colección** | Grupo de datos relacionados |
+| **Fila / Registro** | **Documento** | Unidad básica de datos |
+| **Columna / Campo** | **Campo** | Atributo dentro del documento |
+| **PRIMARY KEY** | **_id (ObjectId)** | Identificador único automático |
+| **FOREIGN KEY** | **Referencia (ObjectId)** | Relación con otro documento |
+| **JOIN** | **populate() o $lookup** | Combinar datos de múltiples colecciones |
+| **Esquema Estricto** | **Esquema Flexible** | Estructura de datos |
+| **ACID** | **BASE** | Modelo de consistencia |
+| **Normalización** | **Desnormalización** | Organización de datos |
+| **SQL** | **MongoDB Query Language** | Lenguaje de consulta |
+| **Transacción Multi-tabla** | **Transacción Multi-documento (limitada)** | Operaciones atómicas |
+| **Escalabilidad Vertical** | **Escalabilidad Horizontal** | Cómo crecer |
+| **mysql2** (Node.js) | **mongoose** (Node.js) | Librería de conexión |
+
+---
+
+## 1.3 Comparación Detallada: Conceptos Fundamentales
+
+### 1.3.1 Estructura de Datos
+
+#### MySQL (Tablas, Filas, Columnas)
+```sql
+-- PASO 1: DEBES crear la tabla primero (estructura obligatoria)
+CREATE TABLE usuarios (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    edad INT,
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- PASO 2: Luego puedes insertar datos
+INSERT INTO usuarios (nombre, email, edad) 
+VALUES ('Juan', 'juan@example.com', 25);
+```
+
+**Características:**
+- ✅ Estructura **fija** y **predefinida**
+- ✅ **DEBES crear la tabla antes** de insertar datos
+- ✅ Todas las filas tienen las **mismas columnas**
+- ✅ Tipos de datos **estrictos** (INT, VARCHAR, DATETIME)
+- ✅ Restricciones de integridad (NOT NULL, UNIQUE, FOREIGN KEY)
+
+#### MongoDB (Colecciones, Documentos, Campos)
+```javascript
+// PASO 1: NO necesitas crear la colección, simplemente insertas
+// Si la colección no existe, MongoDB la crea automáticamente al insertar el primer documento
+
+// PASO 2: Insertar datos (la colección se crea automáticamente si no existe)
+db.usuarios.insertOne({
+  nombre: "Juan",
+  email: "juan@example.com",
+  edad: 25,
+  fecha_creacion: new Date("2025-01-15T10:30:00Z"),
+  direccion: {  // Documento anidado
+    calle: "Av. Principal",
+    ciudad: "Buenos Aires"
+  }
+});
+
+// La colección 'usuarios' ahora existe y contiene el documento insertado
+```
+
+**Características:**
+- ✅ Estructura **flexible** (cada documento puede tener campos diferentes)
+- ✅ **La colección se crea automáticamente** al insertar el primer documento
+- ✅ No necesitas crear la colección explícitamente (a diferencia de MySQL)
+- ✅ Permite **documentos anidados**
+- ✅ No requiere esquema predefinido (aunque Mongoose permite definirlo)
+- ✅ Formato **JSON/BSON** (Binary JSON)
+
+**Diferencia Crucial:**
+- **MySQL**: DEBES crear la tabla antes de insertar datos (`CREATE TABLE` es obligatorio)
+- **MongoDB**: La colección se crea automáticamente al insertar el primer documento (no necesitas `CREATE COLLECTION`)
+
+### 1.3.2 Esquema: Estricto vs Flexible
+
+#### MySQL: Esquema Obligatorio
+```sql
+-- ❌ DEBES definir el esquema antes de insertar
+CREATE TABLE productos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(255) NOT NULL,
+    precio DECIMAL(10, 2) NOT NULL,
+    stock INT DEFAULT 0
+);
+
+-- ❌ Error: No puedes insertar sin definir todas las columnas
+-- ❌ Error: No puedes agregar campos nuevos sin ALTER TABLE
+INSERT INTO productos (nombre, precio, stock, nuevo_campo) 
+VALUES ('Laptop', 999.99, 10, 'valor');  -- ❌ Error: nuevo_campo no existe
+```
+
+#### MongoDB: Esquema Opcional
+```javascript
+// ✅ Puedes insertar sin definir esquema
+db.productos.insertOne({
+  nombre: "Laptop",
+  precio: 999.99,
+  stock: 10
+});
+
+// ✅ Puedes agregar campos nuevos sin modificar estructura
+db.productos.insertOne({
+  nombre: "Mouse",
+  precio: 25.50,
+  stock: 50,
+  color: "negro",  // Campo nuevo, sin problema
+  garantia: "1 año"  // Otro campo nuevo
+});
+```
+
+### 1.3.3 Relaciones: JOINs vs Referencias/Embebido
+
+#### MySQL: Relaciones Explícitas con JOINs
+
+**Características:**
+- ✅ **Relaciones explícitas** mediante claves foráneas (FOREIGN KEY)
+- ✅ **Integridad referencial nativa**: La base de datos garantiza que las relaciones sean válidas
+- ✅ **JOINs nativos y eficientes**: Puedes combinar datos de múltiples tablas en una sola consulta
+- ✅ **Validación automática**: No puedes eliminar un registro si tiene referencias en otras tablas
+- ✅ **Consultas complejas**: Puedes hacer JOINs entre múltiples tablas fácilmente
+- ✅ **Normalización**: Los datos relacionados se mantienen en tablas separadas para evitar duplicación
+
+**Ejemplo conceptual:**
+- Tabla `usuarios` con `id` como PRIMARY KEY
+- Tabla `posts` con `usuario_id` como FOREIGN KEY que referencia a `usuarios.id`
+- Al consultar, usas `JOIN` para combinar ambas tablas y obtener datos relacionados
+
+#### MongoDB: Referencias o Documentos Embebidos
+
+**Importante:** MongoDB **NO tiene relaciones** como MySQL. En su lugar, usa dos estrategias:
+
+**Opción 1: Referencias (Similar a Foreign Key, pero sin integridad referencial)**
+
+**Características:**
+- ✅ Almacenas el `ObjectId` de otro documento como referencia
+- ✅ Similar conceptualmente a una FOREIGN KEY, pero **sin validación automática**
+- ✅ **Sin integridad referencial nativa**: Puedes tener referencias a documentos que no existen
+- ✅ **Consultas separadas**: Necesitas hacer múltiples consultas o usar `populate()` (con Mongoose) o `$lookup` (en aggregation)
+- ✅ **Datos normalizados**: Los datos relacionados se mantienen en colecciones separadas
+- ✅ **Flexibilidad**: Puedes actualizar un documento sin afectar las referencias
+
+**Cuándo usar referencias:**
+- Cuando los datos relacionados se actualizan frecuentemente
+- Cuando los datos relacionados se reutilizan en múltiples documentos
+- Cuando los datos relacionados pueden crecer mucho
+- Cuando necesitas consultar los datos relacionados por separado
+
+**Opción 2: Documentos Embebidos (Todo en un solo documento)**
+
+**Características:**
+- ✅ Almacenas los datos relacionados **dentro del mismo documento**
+- ✅ **Una sola consulta**: Obtienes todos los datos relacionados de una vez
+- ✅ **Mejor rendimiento**: No necesitas hacer JOINs o consultas adicionales
+- ✅ **Atomicidad**: Las operaciones en el documento completo son atómicas
+- ✅ **Desnormalización**: Los datos pueden estar duplicados en múltiples documentos
+
+**Cuándo usar documentos embebidos:**
+- Cuando los datos relacionados se leen juntos frecuentemente
+- Cuando los datos relacionados no se reutilizan en otros documentos
+- Cuando los datos relacionados son pequeños y no cambian frecuentemente
+- Cuando necesitas atomicidad en el documento completo
+
+**Diferencias Clave:**
+
+| Aspecto | MySQL (Relaciones) | MongoDB (Referencias) | MongoDB (Embebido) |
+|---------|-------------------|----------------------|-------------------|
+| **Integridad Referencial** | Nativa y automática | Manual (en aplicación) | No aplica |
+| **Validación** | Automática por BD | Manual | No aplica |
+| **Consultas** | JOIN nativo | Múltiples consultas o $lookup | Una sola consulta |
+| **Rendimiento** | Depende de JOINs | Puede ser más lento | Más rápido para lecturas |
+| **Atomicidad** | Multi-tabla | Limitada | Solo documento |
+| **Duplicación** | Evitada (normalización) | Evitada | Permitida (desnormalización) |
+
+### 1.3.4 Transacciones: ACID vs BASE
+
+#### MySQL: ACID Completo
+
+**ACID** es un acrónimo que describe las propiedades fundamentales de las transacciones en bases de datos relacionales:
+
+- **A**tomicity (Atomicidad): Una transacción se ejecuta completamente o no se ejecuta en absoluto. No hay estados intermedios. Si cualquier parte de la transacción falla, toda la transacción se revierte (ROLLBACK).
+
+- **C**onsistency (Consistencia): La base de datos permanece en un estado válido antes y después de la transacción. Todas las reglas de integridad, restricciones y validaciones se cumplen. No se pueden violar las reglas de negocio.
+
+- **I**solation (Aislamiento): Las transacciones concurrentes no interfieren entre sí. Cada transacción ve una "instantánea" consistente de los datos, incluso si otras transacciones están ejecutándose simultáneamente. Los cambios de una transacción no son visibles para otras hasta que se confirma (COMMIT).
+
+- **D**urability (Durabilidad): Una vez que una transacción se confirma (COMMIT), los cambios son permanentes y sobreviven a fallos del sistema. Los datos se guardan en almacenamiento persistente y no se pierden.
+
+**Características de ACID en MySQL:**
+- ✅ **Garantías fuertes**: Los datos siempre están en un estado consistente y válido
+- ✅ **Transacciones multi-tabla**: Puedes modificar múltiples tablas en una sola transacción
+- ✅ **Consistencia inmediata**: Todos los usuarios ven los cambios inmediatamente después del COMMIT
+- ✅ **Integridad garantizada**: Las restricciones y claves foráneas se validan automáticamente
+- ✅ **Ideal para operaciones críticas**: Sistemas bancarios, reservas, contabilidad, donde la integridad es esencial
+
+**Ejemplo conceptual:**
+Si transfieres dinero entre dos cuentas bancarias, ACID garantiza que:
+- O ambas cuentas se actualizan (débito y crédito), o ninguna (atomicidad)
+- El saldo total siempre es correcto (consistencia)
+- Otras transacciones no ven estados intermedios (aislamiento)
+- Una vez confirmado, el cambio es permanente (durabilidad)
+
+#### MongoDB: BASE
+
+**BASE** es el modelo de consistencia utilizado por MongoDB y muchas bases de datos NoSQL:
+
+- **B**asically **A**vailable (Básicamente Disponible): El sistema está disponible la mayor parte del tiempo, incluso durante actualizaciones o fallos parciales. Prioriza que el sistema responda a las peticiones sobre tener datos perfectamente consistentes en todo momento.
+
+- **S**oft state (Estado Suave): El estado del sistema puede cambiar sin input debido a la eventual consistencia. Los datos pueden estar en un estado "intermedio" o "suave" mientras se sincronizan entre diferentes nodos o servidores.
+
+- **E**ventually consistent (Consistencia Eventual): El sistema eventualmente alcanzará un estado consistente, pero no garantiza consistencia inmediata en todas las lecturas. Diferentes usuarios o servidores pueden ver datos ligeramente diferentes temporalmente, pero eventualmente todos verán el mismo estado.
+
+**Características de BASE en MongoDB:**
+- ✅ **Alta disponibilidad**: El sistema siempre responde, incluso con fallos parciales
+- ✅ **Escalabilidad horizontal**: Puede distribuir datos en múltiples servidores fácilmente
+- ✅ **Mejor rendimiento**: Optimizado para operaciones de lectura masivas
+- ⚠️ **Consistencia eventual**: Puede haber pequeñas inconsistencias temporales entre nodos
+- ⚠️ **Atomicidad limitada**: Por defecto, solo garantiza atomicidad a nivel de un solo documento
+- ⚠️ **Transacciones limitadas**: Transacciones multi-documento disponibles desde MongoDB 4.0, pero con limitaciones
+- ✅ **Ideal para sistemas de alto volumen**: Redes sociales, logs, analytics, donde pequeñas inconsistencias temporales son aceptables
+
+**Ejemplo conceptual:**
+En un sistema de likes en una red social con BASE:
+- Si un usuario da like, el sistema responde inmediatamente (disponibilidad)
+- El conteo de likes puede variar ligeramente entre servidores temporalmente (estado suave)
+- Después de unos segundos, todos los servidores mostrarán el mismo conteo (consistencia eventual)
+- Esto es aceptable porque un like más o menos temporalmente no es crítico
+
+**Diferencias Clave entre ACID y BASE:**
+
+| Aspecto | ACID (MySQL) | BASE (MongoDB) |
+|---------|--------------|----------------|
+| **Prioridad** | Consistencia inmediata | Disponibilidad y escalabilidad |
+| **Atomicidad** | Multi-tabla garantizada | Solo documento (o limitada) |
+| **Consistencia** | Inmediata y estricta | Eventual (puede haber retraso) |
+| **Disponibilidad** | Puede sacrificarse por consistencia | Prioritaria (siempre responde) |
+| **Transacciones** | Robustas y completas | Limitadas o inexistentes |
+| **Uso Ideal** | Sistemas críticos (bancos, reservas) | Sistemas de alto volumen (redes sociales, logs) |
+| **Garantías** | Fuertes y estrictas | Débiles pero flexibles |
+| **Complejidad** | Media | Alta (requiere manejo de conflictos) |
+
+### 1.3.5 Escalabilidad: Vertical vs Horizontal
+
+#### MySQL: Escalabilidad Vertical
+
+**Definición:** Escalar verticalmente significa aumentar la capacidad de un **solo servidor** agregando más recursos (CPU, RAM, almacenamiento, velocidad de disco).
+
+```
+┌─────────────────┐
+│  Servidor Único │
+│  ┌───────────┐  │
+│  │   MySQL   │  │
+│  │  (Más RAM)│  │
+│  │  (Más CPU)│  │
+│  │  (Más SSD)│  │
+│  └───────────┘  │
+└─────────────────┘
+```
+
+**Características:**
+- ✅ Escala **verticalmente** (más recursos al mismo servidor)
+- ✅ **Más simple de implementar**: Solo necesitas actualizar un servidor
+- ✅ **Mejor para cargas predecibles**: Cuando sabes cuánto crecimiento esperar
+- ✅ **Sin cambios en la aplicación**: No necesitas modificar código para escalar
+- ❌ **Limitado por hardware**: Eventualmente alcanzas el límite físico del servidor
+- ❌ **Más costoso**: Hardware potente (servidores con mucha RAM y CPU) es caro
+- ❌ **Punto único de fallo**: Si el servidor falla, todo el sistema falla
+- ❌ **Límites físicos**: No puedes agregar recursos infinitamente a un solo servidor
+
+**Ejemplo:**
+- Servidor inicial: 8GB RAM, 4 CPU cores
+- Escalamiento vertical: Actualizar a 32GB RAM, 16 CPU cores
+- Límite: No puedes ir más allá de lo que el hardware permite
+
+#### MongoDB: Escalabilidad Horizontal
+
+**Definición:** Escalar horizontalmente significa agregar **más servidores** al sistema y distribuir la carga entre ellos. Cada servidor maneja una porción de los datos.
+
+```
+┌──────────┐  ┌──────────┐  ┌──────────┐
+│ Servidor │  │ Servidor │  │ Servidor │
+│  MongoDB │  │  MongoDB │  │  MongoDB │
+│  (Shard) │  │  (Shard) │  │  (Shard) │
+│  Datos A │  │  Datos B │  │  Datos C │
+└──────────┘  └──────────┘  └──────────┘
+       │            │            │
+       └────────────┴────────────┘
+              │
+         Load Balancer
+         (Distribuye consultas)
+```
+
+**Características:**
+- ✅ Escala **horizontalmente** (más servidores)
+- ✅ **Más económico**: Servidores estándar son más baratos que servidores súper potentes
+- ✅ **Escalabilidad casi ilimitada**: Puedes agregar tantos servidores como necesites
+- ✅ **Mejor para grandes volúmenes**: Ideal para Big Data y sistemas con millones de documentos
+- ✅ **Distribución automática**: MongoDB distribuye datos automáticamente mediante sharding
+- ✅ **Tolerancia a fallos**: Si un servidor falla, los otros siguen funcionando
+- ⚠️ **Más complejo de implementar**: Requiere configuración de sharding y balanceo de carga
+- ⚠️ **Requiere cambios en la aplicación**: Puede necesitar ajustes para trabajar con datos distribuidos
+- ⚠️ **Consistencia eventual**: Los datos pueden estar ligeramente desincronizados entre servidores
+
+**Sharding en MongoDB:**
+- **Shard**: Cada servidor que almacena una porción de los datos
+- **Shard Key**: Campo usado para determinar en qué shard se almacena cada documento
+- **Config Server**: Mantiene metadatos sobre la distribución de datos
+- **Mongos**: Router que dirige las consultas al shard correcto
+
+**Ejemplo:**
+- Sistema inicial: 1 servidor con 100GB de datos
+- Escalamiento horizontal: Agregar 2 servidores más, distribuir datos (33GB cada uno)
+- Crecimiento: Agregar más servidores según sea necesario (4, 5, 10 servidores...)
+
+**Comparación Práctica:**
+
+| Aspecto | Escalabilidad Vertical (MySQL) | Escalabilidad Horizontal (MongoDB) |
+|---------|-------------------------------|-----------------------------------|
+| **Costo inicial** | Más bajo (un servidor) | Más alto (múltiples servidores) |
+| **Costo a largo plazo** | Más alto (hardware potente) | Más bajo (servidores estándar) |
+| **Límite de crecimiento** | Limitado por hardware | Prácticamente ilimitado |
+| **Complejidad** | Baja (un servidor) | Alta (múltiples servidores) |
+| **Tolerancia a fallos** | Baja (punto único) | Alta (múltiples puntos) |
+| **Mejor para** | Cargas predecibles, datos estructurados | Big Data, alto volumen, datos distribuidos |
+
+### 1.3.6 Lenguaje de Consulta: SQL vs MongoDB Query Language
+
+#### MySQL: SQL (Structured Query Language)
+
+**Características:**
+- ✅ **Lenguaje estándar**: SQL es un estándar internacional (ANSI/ISO) usado por todas las bases de datos relacionales
+- ✅ **Declarativo**: Describes QUÉ quieres, no CÓMO obtenerlo (la BD decide cómo optimizar)
+- ✅ **Maduro y estable**: SQL existe desde los años 70, muy probado y documentado
+- ✅ **Portable**: El mismo SQL funciona (con pequeñas variaciones) en MySQL, PostgreSQL, SQL Server, Oracle
+- ✅ **JOINs nativos**: Combinar datos de múltiples tablas es natural y eficiente
+- ✅ **Funciones de agregación potentes**: COUNT, SUM, AVG, MAX, MIN, GROUP BY, HAVING
+- ✅ **Optimización automática**: El motor de base de datos optimiza las consultas automáticamente
+- ✅ **Subconsultas**: Puedes anidar consultas dentro de otras consultas
+- ✅ **Vistas**: Puedes crear vistas (consultas guardadas) para simplificar consultas complejas
+
+**Ejemplo:**
+```sql
+SELECT 
+    u.nombre,
+    COUNT(p.id) as total_posts,
+    AVG(p.likes) as promedio_likes
+FROM usuarios u
+LEFT JOIN posts p ON u.id = p.usuario_id
+WHERE u.activo = 1
+GROUP BY u.id
+HAVING total_posts > 5
+ORDER BY promedio_likes DESC
+LIMIT 10;
+```
+
+**Estructura típica de SQL:**
+- `SELECT`: Qué columnas quieres
+- `FROM`: De qué tablas
+- `WHERE`: Filtros antes de agrupar
+- `JOIN`: Combinar tablas
+- `GROUP BY`: Agrupar por campos
+- `HAVING`: Filtros después de agrupar
+- `ORDER BY`: Ordenar resultados
+- `LIMIT`: Limitar cantidad de resultados
+
+#### MongoDB: MongoDB Query Language
+
+**Características:**
+- ✅ **Lenguaje específico**: Diseñado específicamente para MongoDB y documentos JSON/BSON
+- ✅ **Basado en JavaScript**: Usa sintaxis similar a JavaScript, familiar para desarrolladores web
+- ✅ **Consultas basadas en documentos**: Trabajas con objetos JSON, no con filas y columnas
+- ✅ **Pipeline de agregación**: Procesa datos en etapas (similar a pipes en Unix)
+- ✅ **Flexible**: Puedes consultar campos anidados y arrays fácilmente
+- ⚠️ **JOINs más costosos**: `$lookup` (equivalente a JOIN) es más lento que JOINs nativos de SQL
+- ⚠️ **Menos estándar**: Cada base de datos NoSQL tiene su propio lenguaje de consulta
+- ✅ **Operadores potentes**: `$match`, `$group`, `$project`, `$sort`, `$limit`, `$unwind`, etc.
+- ✅ **Expresiones complejas**: Puedes usar expresiones JavaScript en algunas operaciones
+- ⚠️ **Curva de aprendizaje**: Requiere aprender sintaxis específica de MongoDB
+
+**Ejemplo equivalente:**
+```javascript
+// Consultas con MongoDB Query Language
+const usuarios = await Usuario.aggregate([
+  { $match: { activo: true } },  // WHERE
+  { $lookup: {  // JOIN
+      from: 'posts',
+      localField: '_id',
+      foreignField: 'autor',
+      as: 'posts'
+    }
+  },
+  { $project: {  // SELECT
+      nombre: 1,
+      total_posts: { $size: '$posts' },  // COUNT
+      promedio_likes: { $avg: '$posts.likes' }  // AVG
+    }
+  },
+  { $match: { total_posts: { $gt: 5 } } },  // HAVING
+  { $sort: { promedio_likes: -1 } },  // ORDER BY
+  { $limit: 10 }  // LIMIT
+]);
+```
+
+**Estructura típica de MongoDB Query:**
+- **Consultas simples**: `find({ campo: valor })` - similar a `WHERE`
+- **Pipeline de agregación**: Array de etapas que procesan datos secuencialmente
+- `$match`: Filtra documentos (equivalente a WHERE)
+- `$lookup`: Combina colecciones (equivalente a JOIN)
+- `$group`: Agrupa documentos (equivalente a GROUP BY)
+- `$project`: Selecciona campos (equivalente a SELECT)
+- `$sort`: Ordena resultados (equivalente a ORDER BY)
+- `$limit`: Limita resultados (equivalente a LIMIT)
+
+**Diferencias Clave:**
+
+| Aspecto | SQL (MySQL) | MongoDB Query Language |
+|---------|-------------|------------------------|
+| **Sintaxis** | Declarativa, basada en palabras clave | Basada en JavaScript/JSON |
+| **Estructura** | Filas y columnas | Documentos y campos |
+| **JOINs** | Nativos y eficientes | `$lookup` más costoso |
+| **Consultas anidadas** | Subconsultas nativas | Pipeline de agregación |
+| **Campos anidados** | Requiere JOINs o funciones especiales | Acceso directo con notación de punto |
+| **Arrays** | Requiere funciones especiales | Manejo nativo y potente |
+| **Estándar** | ANSI/ISO (portable) | Específico de MongoDB |
+| **Curva de aprendizaje** | Media (si conoces SQL) | Media-Alta (sintaxis nueva) |
+| **Optimización** | Automática por el motor | Automática pero menos madura |
+| **Flexibilidad** | Estructura fija (tablas) | Estructura flexible (documentos) |
+
+**Ventajas de SQL:**
+- Más maduro y probado
+- Estándar internacional
+- Mejor para consultas complejas con múltiples JOINs
+- Más documentación y recursos disponibles
+
+**Ventajas de MongoDB Query Language:**
+- Más natural para desarrolladores JavaScript
+- Mejor para consultar documentos anidados y arrays
+- Pipeline de agregación muy potente y flexible
+- Sintaxis más concisa para operaciones simples
+
+---
+
+## 1.4 Tabla Comparativa Completa
+
+| Aspecto | MySQL (SQL) | MongoDB (NoSQL) |
+|---------|-------------|-----------------|
+| **Tipo** | Relacional | No Relacional |
+| **Estructura** | Tablas, Filas, Columnas | Colecciones, Documentos |
+| **Esquema** | Estricto y obligatorio | Flexible y opcional |
+| **Relaciones** | JOINs nativos | Referencias o embebido |
+| **Escalabilidad** | Vertical | Horizontal |
+| **ACID** | Completo | Parcial (desde v4.0) |
+| **BASE** | No aplica | Sí (modelo de consistencia) |
+| **Lenguaje** | SQL (estándar) | MongoDB Query Language |
+| **Integridad Referencial** | Nativa (FOREIGN KEY) | Manual (en aplicación) |
+| **Normalización** | Requerida | Permite desnormalización |
+| **Rendimiento** | Predecible, consistente | Muy rápido para lecturas |
+| **Caso de Uso** | Datos estructurados, relaciones complejas | Datos flexibles, alto volumen |
+| **Conexión Node.js** | `mysql2` (pool) | `mongoose` (ODM) |
+| **Validación** | A nivel de BD | A nivel de aplicación (Mongoose) |
+
+---
+
+## 1.5 ¿Cuándo usar cada una?
+
+### Usar MySQL cuando:
+- ✅ **Integridad de datos crítica**: Sistemas bancarios, contabilidad, reservas
+- ✅ **Relaciones complejas**: Múltiples tablas relacionadas con JOINs frecuentes
+- ✅ **Transacciones ACID**: Operaciones que deben ser atómicas y consistentes
+- ✅ **Datos estructurados**: Esquema estable y predecible
+- ✅ **Consultas complejas**: Necesitas JOINs, GROUP BY, funciones de agregación
+
+### Usar MongoDB cuando:
+- ✅ **Alto volumen de datos**: Big Data, logs, IoT, redes sociales
+- ✅ **Esquema flexible**: Estructura de datos variable o que cambia frecuentemente
+- ✅ **Escalabilidad horizontal**: Necesitas distribuir datos en múltiples servidores
+- ✅ **Lecturas rápidas**: Optimizado para operaciones de lectura masivas
+- ✅ **Datos semi-estructurados**: JSON, documentos, contenido variado
+- ✅ **Desarrollo ágil**: Startups, prototipos, aplicaciones que evolucionan rápido
+
+### Casos Híbridos
+Muchas aplicaciones modernas usan **ambas**:
+- **MySQL**: Para datos estructurados y críticos (usuarios, pedidos, pagos)
+- **MongoDB**: Para datos flexibles y de alto volumen (logs, analytics, contenido)
+
+---
+
+## 3. BASE: Modelo de Consistencia
 
 **BASE** es un acrónimo que describe el modelo de consistencia utilizado por muchas bases de datos NoSQL, incluyendo MongoDB. A diferencia de ACID (usado en bases de datos relacionales), BASE prioriza la **disponibilidad y escalabilidad** sobre la consistencia inmediata.
 
@@ -326,7 +957,7 @@ try {
 
 ---
 
-## 3. Conceptos Fundamentales
+## 4. Conceptos Fundamentales
 
 ### Base de Datos (Database)
 Contenedor de colecciones. Se crea automáticamente al insertar el primer documento.
@@ -338,7 +969,14 @@ use mi_base_de_datos  // Cambiar a una base de datos
 ### Colección (Collection)
 Un grupo de documentos. Similar a una "tabla" pero sin esquema fijo.
 
+**⚠️ Diferencia crucial con MySQL:** En MongoDB, **NO necesitas crear la colección explícitamente**. La colección se crea automáticamente al insertar el primer documento con `insertOne()` o `insertMany()`.
+
 ```javascript
+// NO necesitas hacer CREATE COLLECTION
+// Simplemente insertas y la colección se crea automáticamente:
+db.usuarios.insertOne({ nombre: "Juan" });  // La colección 'usuarios' se crea aquí
+
+// Acceder a la colección
 db.usuarios  // Acceder a la colección 'usuarios'
 ```
 
@@ -377,112 +1015,6 @@ Conjunto de servidores que trabajan juntos:
 
 ### Atlas
 Servicio de MongoDB en la nube (DBaaS - Database as a Service).
-
----
-
-## 4. Instalación y Herramientas
-
-### MongoDB Community Server
-El motor de la base de datos (el "servidor"). Es necesario instalarlo para que MongoDB funcione.
-
-**Descarga e Instalación:**
-- **Enlace de descarga**: [https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community)
-- **Windows**: Descargar el instalador `.msi` desde el enlace, ejecutar y seguir el asistente de instalación
-- **Mac**: 
-  ```bash
-  brew install mongodb-community
-  ```
-- **Linux**: 
-  ```bash
-  # Ubuntu/Debian
-  apt-get install mongodb
-  
-  # CentOS/RHEL
-  yum install mongodb
-  ```
-
-**Iniciar el servidor:**
-```bash
-# Windows (después de la instalación, se inicia automáticamente como servicio)
-# O manualmente desde la línea de comandos:
-mongod
-
-# Mac/Linux
-mongod
-```
-
-### MongoDB Compass
-Interfaz gráfica (GUI) oficial de MongoDB. Permite:
-- Visualizar datos de forma gráfica
-- Crear y gestionar índices
-- Ejecutar agregaciones visualmente
-- Administrar bases de datos y colecciones
-- Ejecutar consultas y ver resultados
-- **Incluye un shell integrado** para ejecutar comandos directamente
-
-**Descarga e Instalación:**
-- **Enlace de descarga**: [https://www.mongodb.com/try/download/compass](https://www.mongodb.com/try/download/compass)
-- **Windows**: Descargar el instalador `.msi`, ejecutar y seguir el asistente
-- **Mac**: Descargar el archivo `.dmg` e instalar
-- **Linux**: Descargar el paquete `.deb` o `.rpm` según tu distribución
-
-**Uso:**
-- Abre MongoDB Compass
-- Conecta a `mongodb://localhost:27017` (o tu servidor remoto)
-- Explora tus bases de datos y colecciones visualmente
-
-**⚠️ Nota importante sobre MongoDB Shell:**
-- **Compass incluye un shell integrado** en su interfaz, por lo que puedes ejecutar comandos de MongoDB directamente desde Compass sin necesidad de instalar `mongosh` por separado.
-- Sin embargo, si prefieres usar la **terminal/consola de comandos** para trabajar con MongoDB, necesitarás instalar `mongosh` por separado (ver sección siguiente).
-
-### MongoDB Shell (`mongosh`)
-La consola de comandos moderna para interactuar con la base de datos mediante código JavaScript desde la terminal.
-
-**¿Necesito instalar mongosh si ya tengo Compass?**
-- **NO es estrictamente necesario** si solo usas Compass, ya que Compass incluye un shell integrado.
-- **SÍ es recomendable** si prefieres trabajar desde la terminal, necesitas automatizar tareas con scripts, o quieres usar MongoDB en entornos sin interfaz gráfica.
-
-**Descarga e Instalación:**
-- **Enlace de descarga**: [https://www.mongodb.com/try/download/shell](https://www.mongodb.com/try/download/shell)
-- **Windows**: Descargar el instalador `.msi` y seguir el asistente
-- **Mac**: Descargar el archivo `.tgz` o usar Homebrew:
-  ```bash
-  brew install mongosh
-  ```
-- **Linux**: Descargar el paquete `.deb` o `.rpm` según tu distribución
-
-**Iniciar:**
-```bash
-mongosh
-```
-
-**Conectar a servidor local:**
-```bash
-mongosh "mongodb://localhost:27017"
-```
-
-**Conectar a servidor remoto:**
-```bash
-mongosh "mongodb://usuario:password@servidor:27017/nombre_db"
-```
-
-**Conectar a MongoDB Atlas (nube):**
-```bash
-mongosh "mongodb+srv://usuario:password@cluster.mongodb.net/nombre_db"
-```
-
-### Resumen de Herramientas
-
-| Herramienta | ¿Qué es? | ¿Cuándo usarla? | ¿Es obligatoria? |
-|-------------|----------|-----------------|------------------|
-| **MongoDB Community Server** | El servidor de base de datos | Siempre (necesario para que MongoDB funcione) | ✅ Sí, obligatorio |
-| **MongoDB Compass** | Interfaz gráfica (GUI) | Para visualizar datos, administrar bases de datos, trabajar con interfaz gráfica | ⚠️ Opcional pero muy recomendado |
-| **MongoDB Shell (mongosh)** | Consola de comandos | Para trabajar desde terminal, automatizar tareas, scripts | ⚠️ Opcional (Compass incluye shell integrado) |
-
-**Recomendación para principiantes:**
-1. Instala **MongoDB Community Server** (obligatorio)
-2. Instala **MongoDB Compass** (muy recomendado para empezar)
-3. Instala **mongosh** solo si prefieres trabajar desde la terminal o necesitas automatizar tareas
 
 ---
 
@@ -814,7 +1346,7 @@ db.usuarios.find({
 
 ---
 
-## 6. Expresiones de Consulta
+## 7. Expresiones de Consulta
 
 ### Ejemplos Prácticos de Consultas
 
@@ -872,7 +1404,7 @@ db.usuarios.find({
 
 ---
 
-## 7. Tipos de Datos
+## 8. Tipos de Datos
 
 MongoDB soporta los siguientes tipos de datos en los esquemas:
 
@@ -964,9 +1496,20 @@ Números decimales de alta precisión.
 precio: mongoose.Schema.Types.Decimal128
 ```
 
+#### Enum
+Restringe los valores a un conjunto predefinido de opciones.
+
+```javascript
+rol: {
+  type: String,
+  enum: ['admin', 'user', 'guest'],
+  default: 'user'
+}
+```
+
 ---
 
-## 8. Esquemas y Validaciones con Mongoose
+## 9. Esquemas y Validaciones con Mongoose
 
 Aunque MongoDB es flexible, en una app real queremos que nuestros datos tengan una estructura consistente. **Mongoose** es el ODM (Object Document Mapper) que usamos en Node.js para modelar y validar esos datos.
 
@@ -1023,7 +1566,7 @@ email: { type: String, unique: true, index: true }
 
 ---
 
-## 9. Modificadores de Campos
+## 10. Modificadores de Campos
 
 Los modificadores permiten transformar valores antes de guardarlos o después de recuperarlos.
 
@@ -1134,7 +1677,7 @@ usuarioSchema.set('toJSON', { getters: true });
 
 ---
 
-## 10. Validators y Custom Validators
+## 11. Validators y Custom Validators
 
 ### Validator Básico
 
@@ -1229,7 +1772,7 @@ const Usuario = mongoose.model('Usuario', usuarioSchema);
 
 ---
 
-## 11. Virtuals (Valores Virtuales)
+## 12. Virtuals (Valores Virtuales)
 
 Un valor virtual es un campo que no se almacena en la base de datos, pero que puede ser calculado o derivado de otros campos en el documento.
 
